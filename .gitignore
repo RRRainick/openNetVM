@@ -49,3 +49,7 @@ _preinstall
 
 # Debug files
 *.dSYM/
+
+# Clangd
+compile_commands.json
+.cache/
