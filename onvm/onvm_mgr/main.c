@@ -175,6 +175,21 @@ master_thread_main(void) {
 }
 
 /*
+ * Msg thread
+ */
+
+static int
+msg_thread_main(__attribute__((unused)) void *arg) {
+        unsigned cur_lcore = rte_lcore_id();
+        RTE_LOG(INFO, APP, "Socket %d, Core %d: Running MSG thread\n", rte_socket_id(), cur_lcore);
+        while (worker_keep_running) {
+                sleep(1);
+        }
+        RTE_LOG(INFO, APP, "Socket %d, Core %d: MSG thread done\n", rte_socket_id(), rte_lcore_id());
+        return 0;
+}
+
+/*
  * Function to receive packets from the NIC
  * and distribute them to the default service
  */
@@ -385,6 +400,7 @@ main(int argc, char *argv[]) {
         if (ONVM_NF_SHARE_CORES)
                 RTE_LOG(INFO, APP, "%d cores available for handling wakeup\n", wakeup_lcores);
         RTE_LOG(INFO, APP, "%d cores available for handling stats\n", 1);
+        RTE_LOG(INFO, APP, "%d cores available for handling msg\n", 1);
 
         /* Evenly assign NFs to TX threads */
 
@@ -407,6 +423,15 @@ main(int argc, char *argv[]) {
         struct queue_mgr *tx_mgr[tx_lcores];
         struct queue_mgr *rx_mgr[rx_lcores];
         struct wakeup_thread_context *wakeup_ctx[ONVM_NUM_WAKEUP_THREADS];
+
+        /* Launch message thread */
+        cur_lcore = rte_get_next_lcore(cur_lcore, 1, 1);
+        if (rte_eal_remote_launch(msg_thread_main, NULL, cur_lcore) == -EBUSY) {
+                RTE_LOG(ERR, APP, "Socket %d, Core %d is already busy, can't use for MSG thread\n",
+                        rte_socket_id(), cur_lcore);
+                onvm_main_free(tx_lcores, rx_lcores, tx_mgr, rx_mgr, wakeup_ctx);
+                return -1;
+        }
 
         for (i = 0; i < tx_lcores; i++) {
                 tx_mgr[i] = rte_calloc(NULL, 1, sizeof(struct queue_mgr), RTE_CACHE_LINE_SIZE);
