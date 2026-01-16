@@ -283,19 +283,19 @@ set_default_config(struct onvm_configuration *config) {
  */
 static int
 init_mbuf_pools(void) {
-        uint16_t mbuf_size;
+        uint16_t data_room_size;
+        uint16_t priv_size = sizeof(struct onvm_pkt_meta);
 
         if (ONVM_USE_JUMBO_FRAMES)
-                mbuf_size = 9600 + RTE_ETHER_CRC_LEN + RTE_ETHER_HDR_LEN + MBUF_OVERHEAD;
+                data_room_size = 9600 + RTE_ETHER_CRC_LEN + RTE_ETHER_HDR_LEN + RTE_PKTMBUF_HEADROOM;
         else
-                mbuf_size = RTE_MBUF_DEFAULT_DATAROOM + MBUF_OVERHEAD;
-
+                data_room_size = RTE_MBUF_DEFAULT_DATAROOM + RTE_PKTMBUF_HEADROOM;
         /* don't pass single-producer/single-consumer flags to mbuf create as it
-         * seems faster to use a cache instead */
+        * seems faster to use a cache instead */
         printf("Creating mbuf pool '%s' [%u mbufs] ...\n", PKTMBUF_POOL_NAME, NUM_MBUFS);
-        pktmbuf_pool = rte_mempool_create(PKTMBUF_POOL_NAME, NUM_MBUFS, mbuf_size, MBUF_CACHE_SIZE,
-                                          sizeof(struct rte_pktmbuf_pool_private), rte_pktmbuf_pool_init, NULL,
-                                          rte_pktmbuf_init, NULL, rte_socket_id(), NO_FLAGS);
+        pktmbuf_pool = rte_pktmbuf_pool_create(PKTMBUF_POOL_NAME, NUM_MBUFS,
+                                            MBUF_CACHE_SIZE, priv_size, data_room_size,
+                                            rte_socket_id());
 
         return (pktmbuf_pool == NULL); /* 0  on success */
 }

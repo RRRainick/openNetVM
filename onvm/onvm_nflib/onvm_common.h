@@ -113,16 +113,17 @@ struct onvm_pkt_meta {
         uint16_t src;         /* who processed the packet last */
         uint8_t chain_index;  /*index of the current step in the service chain*/
         uint8_t flags;        /* bits for custom NF data. Use with caution to prevent collisions from different NFs. */
+        uint64_t unused;
 };
 
 static inline struct onvm_pkt_meta *
 onvm_get_pkt_meta(struct rte_mbuf *pkt) {
-        return (struct onvm_pkt_meta *)&pkt->udata64;
+        return (struct onvm_pkt_meta *)rte_mbuf_to_priv(pkt);
 }
 
 static inline uint8_t
 onvm_get_pkt_chain_index(struct rte_mbuf *pkt) {
-        struct onvm_pkt_meta* pkt_meta = (struct onvm_pkt_meta*) &pkt->udata64;
+        struct onvm_pkt_meta* pkt_meta = onvm_get_pkt_meta(pkt);
         return pkt_meta->chain_index;
 }
 

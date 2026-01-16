@@ -67,7 +67,7 @@ onvm_pkt_process_rx_batch(struct queue_mgr *rx_mgr, struct rte_mbuf *pkts[], uin
                 return;
 
         for (i = 0; i < rx_count; i++) {
-                meta = (struct onvm_pkt_meta *)&(((struct rte_mbuf *)pkts[i])->udata64);
+                meta = onvm_get_pkt_meta((struct rte_mbuf *)pkts[i]);
                 meta->src = 0;
                 meta->chain_index = 0;
 #ifdef FLOW_LOOKUP
