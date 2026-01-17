@@ -48,11 +48,14 @@
 ******************************************************************************/
 
 #include <signal.h>
+#include <sys/time.h>
 
+#include "onvm_common.h"
 #include "onvm_mgr.h"
 #include "onvm_nf.h"
 #include "onvm_pkt.h"
 #include "onvm_stats.h"
+#include "rte_log.h"
 
 /****************************Internal Declarations****************************/
 
@@ -64,6 +67,11 @@ static uint8_t main_keep_running = 1;
 // We'll want to shut down the TX/RX threads second so that we don't
 // race the stats display to be able to print, so keep this varable separate
 static uint8_t worker_keep_running = 1;
+
+/* Update by timer */
+win_idx_t global_win_idx = 0;
+#define TIMER_INIT_OFFSET_SEC 5
+#define TIMER_INTERVAL_SEC 1
 
 static void
 handle_signal(int sig);
@@ -258,6 +266,9 @@ static void
 handle_signal(int sig) {
         if (sig == SIGINT || sig == SIGTERM) {
                 main_keep_running = 0;
+        } else if (sig == SIGALRM) {
+                global_win_idx++;
+                // RTE_LOG(INFO, APP, "global_win_idx: %u\n", global_win_idx);
         }
 }
 
@@ -342,6 +353,28 @@ struct queue_mgr *rx_mgr[], struct wakeup_thread_context *wakeup_ctx[]) {
                 }
         }
 }
+
+/*
+ * Function to initialize and start timer to update win_idx
+ */
+static int
+dmt_init_timer(void) {
+        int ret;
+        struct itimerval timer_info = {
+                .it_value.tv_sec = TIMER_INIT_OFFSET_SEC,
+                .it_value.tv_usec = 0,
+                .it_interval.tv_sec = TIMER_INTERVAL_SEC,
+                .it_interval.tv_usec = 0,
+        };
+
+        ret = setitimer(ITIMER_REAL, &timer_info, NULL);
+
+        if (!ret)
+                RTE_LOG(INFO, APP, "Timer initialized. Start in %ld s %ld us\n", timer_info.it_value.tv_sec, timer_info.it_value.tv_usec);
+
+        return ret;
+}
+
 /*******************************Main function*********************************/
 int
 main(int argc, char *argv[]) {
@@ -403,10 +436,16 @@ main(int argc, char *argv[]) {
         /* Listen for ^C and docker stop so we can exit gracefully */
         signal(SIGINT, handle_signal);
         signal(SIGTERM, handle_signal);
+        signal(SIGALRM, handle_signal);
 
         struct queue_mgr *tx_mgr[tx_lcores];
         struct queue_mgr *rx_mgr[rx_lcores];
         struct wakeup_thread_context *wakeup_ctx[ONVM_NUM_WAKEUP_THREADS];
+
+        if (dmt_init_timer() < 0) {
+                RTE_LOG(ERR, APP, "Can't start timer");
+                goto onvm_free;
+        }
 
         for (i = 0; i < tx_lcores; i++) {
                 tx_mgr[i] = rte_calloc(NULL, 1, sizeof(struct queue_mgr), RTE_CACHE_LINE_SIZE);
