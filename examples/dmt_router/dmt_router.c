@@ -54,6 +54,7 @@
 #include <rte_mbuf.h>
 
 #include "onvm_nflib.h"
+#include "onvm_nflib_dmt.h"
 #include "onvm_pkt_helper.h"
 
 #define NF_TAG "dmt_router"
@@ -139,9 +140,10 @@ do_stats_display(struct rte_mbuf *pkt) {
 }
 
 static int
-packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
-               __attribute__((unused)) struct onvm_nf_local_ctx *nf_local_ctx) {
+packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, struct onvm_nf_local_ctx *nf_local_ctx) {
         static uint32_t counter = 0;
+        struct onvm_dmt_nf_info *info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
+
         if (counter++ == print_delay) {
                 do_stats_display(pkt);
                 counter = 0;
@@ -149,6 +151,7 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
 
         if (pkt->port == 0) {
                 meta->destination = 1;
+                onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
         } else {
                 meta->destination = 0;
         }
@@ -168,6 +171,7 @@ main(int argc, char *argv[]) {
 
         nf_function_table = onvm_nflib_init_nf_function_table();
         nf_function_table->pkt_handler = &packet_handler;
+        nf_function_table->setup = &onvm_nflib_dmt_nf_setup;
 
         if ((arg_offset = onvm_nflib_init(argc, argv, NF_TAG, nf_local_ctx, nf_function_table)) < 0) {
                 onvm_nflib_stop(nf_local_ctx);
@@ -189,6 +193,7 @@ main(int argc, char *argv[]) {
 
         onvm_nflib_run(nf_local_ctx);
 
+        onvm_nflib_dmt_nf_cleanup(nf_local_ctx);
         onvm_nflib_stop(nf_local_ctx);
         printf("If we reach here, program is ending\n");
         return 0;

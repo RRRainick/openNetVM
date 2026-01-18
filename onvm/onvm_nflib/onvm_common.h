@@ -108,6 +108,8 @@
 #define NF_TERM_STOP_ITER_TIMES 10
 
 typedef uint32_t win_idx_t;
+typedef uint32_t mpw_t;
+#define MPW_MAX UINT32_MAX
 
 struct onvm_pkt_meta {
         uint8_t action;       /* Action to be performed */
@@ -116,6 +118,7 @@ struct onvm_pkt_meta {
         uint8_t chain_index;  /*index of the current step in the service chain*/
         uint8_t flags;        /* bits for custom NF data. Use with caution to prevent collisions from different NFs. */
         win_idx_t win_idx;
+        mpw_t min_mpw;
 };
 
 static inline struct onvm_pkt_meta *

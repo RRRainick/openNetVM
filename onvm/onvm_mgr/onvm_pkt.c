@@ -46,10 +46,19 @@
 
 ******************************************************************************/
 
+#include "onvm_common.h"
 #include "onvm_mgr.h"
 
 #include "onvm_nf.h"
 #include "onvm_pkt.h"
+
+extern win_idx_t global_win_idx;
+
+static void
+dmt_init_metadata(struct onvm_pkt_meta *meta) {
+        meta->min_mpw = MPW_MAX;
+        meta->win_idx = global_win_idx;
+}
 
 /**********************************Interfaces*********************************/
 
@@ -70,6 +79,7 @@ onvm_pkt_process_rx_batch(struct queue_mgr *rx_mgr, struct rte_mbuf *pkts[], uin
                 meta = onvm_get_pkt_meta((struct rte_mbuf *)pkts[i]);
                 meta->src = 0;
                 meta->chain_index = 0;
+                dmt_init_metadata(meta);
 #ifdef FLOW_LOOKUP
                 ret = onvm_flow_dir_get_pkt(pkts[i], &flow_entry);
                 if (ret >= 0) {
