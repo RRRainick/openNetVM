@@ -52,7 +52,9 @@
 #include <rte_common.h>
 #include <rte_ip.h>
 #include <rte_mbuf.h>
+#include <rte_malloc.h>
 
+#include "onvm_common.h"
 #include "onvm_nflib.h"
 #include "onvm_pkt_helper.h"
 
@@ -60,6 +62,9 @@
 
 /* number of package between each print */
 static uint32_t print_delay = 1000000;
+
+/* Structs that contain information to cache */
+struct cache_request *cache_req;
 
 /*
  * Print a usage message
@@ -142,6 +147,7 @@ static int
 packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
                __attribute__((unused)) struct onvm_nf_local_ctx *nf_local_ctx) {
         static uint32_t counter = 0;
+
         if (counter++ == print_delay) {
                 do_stats_display(pkt);
                 counter = 0;
@@ -152,6 +158,17 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
         } else {
                 meta->destination = 0;
         }
+
+        if (onvm_pkt_is_tcp(pkt)) {
+                cache_req = (struct cache_request *) rte_malloc(NULL, sizeof(struct cache_request), 0); /* freed by NF Manager in onvm_nf_check_cache_req */
+
+                if (!cache_req) return 0;
+
+                cache_req->unused = UINT8_MAX;
+                onvm_nflib_request_cache(cache_req);
+                rte_free(cache_req);
+        }
+
         meta->action = ONVM_NF_ACTION_OUT;
         return 0;
 }

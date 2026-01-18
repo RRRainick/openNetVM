@@ -44,10 +44,10 @@ include $(RTE_SDK)/mk/rte.vars.mk
 RTE_TARGET ?= x86_64-native-linuxapp-gcc
 
 # binary name
-APP = bridge
+APP = dmt_egress
 
 # all source are stored in SRCS-y
-SRCS-y := bridge.c
+SRCS-y := dmt_egress.c
 
 ONVM= $(SRCDIR)/../../onvm
 
