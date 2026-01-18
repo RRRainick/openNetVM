@@ -116,6 +116,7 @@ struct onvm_pkt_meta {
         uint8_t flags;        /* bits for custom NF data. Use with caution to prevent collisions from different NFs. */
         win_idx_t win_idx;
         mpw_t min_mpw;
+        match_t bitmap[REWRITE_LEN];
 };
 
 static inline struct onvm_pkt_meta *

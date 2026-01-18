@@ -30,6 +30,11 @@ int onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_meta *
 struct onvm_dmt_nf_info *
 onvm_nflib_dmt_get_nf_info(struct onvm_nf_local_ctx *nf_local_ctx);
 
+void
+onvm_nflib_dmt_print_bitmap(struct onvm_pkt_meta *meta);
+
+void
+onvm_nflib_dmt_synthesize_bitmap(struct onvm_dmt_nf_info *info, struct onvm_pkt_meta *meta);
 /*
  * NF should define their own dmt_nf_match_field and dmt_nf_rewrite_field.
  * 0x0 if not defined

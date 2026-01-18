@@ -135,3 +135,34 @@ onvm_nflib_dmt_nf_cleanup(struct onvm_nf_local_ctx *nf_local_ctx) {
 
         onvm_ft_free(info->mpw_table);
 }
+
+void
+onvm_nflib_dmt_print_bitmap(struct onvm_pkt_meta *meta) {
+        rewrite_t i;
+        for (i = 0; i < REWRITE_LEN; i++) {
+                if (meta->bitmap[i]) {
+                        RTE_LOG(INFO, APP, "meta->bitmap[%u] = 0x%02hhX\n", i, meta->bitmap[i]);
+                }
+        }
+}
+
+void
+onvm_nflib_dmt_synthesize_bitmap(struct onvm_dmt_nf_info *info, struct onvm_pkt_meta *meta) {
+        rewrite_t i;
+        match_t j;
+
+        for (i = 0; i < REWRITE_LEN; i++) {
+                if (ONVM_CHECK_BIT(info->rewrite_field, i)) {
+                        for (j = 0; j < MATCH_LEN; j++) {
+                                if (ONVM_CHECK_BIT(info->match_field, j)) {
+                                        if (meta->bitmap[j] == 0) {
+                                                meta->bitmap[i] = ONVM_SET_BIT(meta->bitmap[i], j);
+                                        }
+                                        else {
+                                                meta->bitmap[i] |= meta->bitmap[j];
+                                        }
+                                }
+                        }
+                }
+        }
+}

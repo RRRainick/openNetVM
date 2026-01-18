@@ -58,6 +58,7 @@ static void
 dmt_init_metadata(struct onvm_pkt_meta *meta) {
         meta->min_mpw = MPW_MAX;
         meta->win_idx = global_win_idx;
+        memset(meta->bitmap, 0, sizeof(meta->bitmap));
 }
 
 /**********************************Interfaces*********************************/
