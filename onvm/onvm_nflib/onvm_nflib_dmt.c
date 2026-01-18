@@ -7,6 +7,7 @@
 
 #include "onvm_nflib_dmt.h"
 #include "onvm_common.h"
+#include "onvm_dmt_types.h"
 #include "onvm_pkt_helper.h"
 
 match_t dmt_nf_match_field __attribute__((weak)) = 0x0;
@@ -116,7 +117,7 @@ onvm_nflib_dmt_nf_setup(struct onvm_nf_local_ctx *nf_local_ctx) {
         }
 
         info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
-        info->mpw_table = onvm_ft_create(ONVM_NFLIB_DMT_NUM_HIT_FT_ENTRIES, sizeof(struct onvm_dmt_mpw_data));
+        info->mpw_table = onvm_ft_create(ONVM_NFLIB_DMT_MPW_ENTRIES, sizeof(struct onvm_dmt_mpw_data));
         if (info->mpw_table == NULL) {
                 rte_exit(EXIT_FAILURE, "Unable to create mpw table\n");
         }

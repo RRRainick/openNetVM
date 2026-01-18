@@ -4,18 +4,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <rte_mbuf.h>
-#include "onvm_common.h"
+#include "onvm_dmt_types.h"
 #include "onvm_flow_table.h"
 #include "onvm_nflib.h"
 
-/* mpw */
-#define ONVM_NFLIB_DMT_NUM_HIT_FT_ENTRIES 1024
-
-/* bitmap */
-typedef uint8_t match_t;
-typedef uint8_t rewrite_t;
-#define MATCH_LEN (sizeof(match_t) * CHAR_BIT)
-#define REWRITE_LEN (sizeof(rewrite_t) * CHAR_BIT)
+#define ONVM_NFLIB_DMT_MPW_ENTRIES 1024
 
 extern match_t dmt_nf_match_field;
 extern rewrite_t dmt_nf_rewrite_field;

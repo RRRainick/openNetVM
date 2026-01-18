@@ -50,7 +50,7 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include "onvm_common.h"
+#include "onvm_dmt_types.h"
 #include "onvm_mgr.h"
 #include "onvm_nf.h"
 #include "onvm_pkt.h"

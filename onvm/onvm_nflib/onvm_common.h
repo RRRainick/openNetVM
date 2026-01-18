@@ -58,6 +58,7 @@
 
 #include "onvm_config_common.h"
 #include "onvm_msg_common.h"
+#include "onvm_dmt_types.h"
 
 #define ONVM_NF_HANDLE_TX 1                   // should be true if NFs primarily pass packets to each other
 #define ONVM_NF_SHUTDOWN_CORE_REASSIGNMENT 0  // should be true if on NF shutdown onvm_mgr tries to reallocate cores
@@ -106,10 +107,6 @@
 #define NF_TERM_INIT_ITER_TIMES 3
 /* If a lot of children spawned this might need to be increased */
 #define NF_TERM_STOP_ITER_TIMES 10
-
-typedef uint32_t win_idx_t;
-typedef uint32_t mpw_t;
-#define MPW_MAX UINT32_MAX
 
 struct onvm_pkt_meta {
         uint8_t action;       /* Action to be performed */
