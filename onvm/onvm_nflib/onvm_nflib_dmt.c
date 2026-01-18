@@ -9,6 +9,9 @@
 #include "onvm_common.h"
 #include "onvm_pkt_helper.h"
 
+match_t dmt_nf_match_field __attribute__((weak)) = 0x0;
+rewrite_t dmt_nf_rewrite_field __attribute__((weak)) = 0x0;
+
 static int
 onvm_nflib_dmt_add_mpw_entry(struct rte_mbuf *pkt, struct onvm_ft *mpw_table) {
         int idx;
@@ -117,6 +120,10 @@ onvm_nflib_dmt_nf_setup(struct onvm_nf_local_ctx *nf_local_ctx) {
         if (info->mpw_table == NULL) {
                 rte_exit(EXIT_FAILURE, "Unable to create mpw table\n");
         }
+
+        info->match_field = dmt_nf_match_field;
+        info->rewrite_field = dmt_nf_rewrite_field;
+        RTE_LOG(INFO, APP, "match_field: 0x%02hhX, rewrite_field: 0x%02hhX\n", info->match_field, info->rewrite_field);
 
         return;
 }

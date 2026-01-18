@@ -59,6 +59,9 @@
 
 #define NF_TAG "dmt_router"
 
+match_t dmt_nf_match_field = 0x01;
+rewrite_t dmt_nf_rewrite_field = 0x01;
+
 /* number of package between each print */
 static uint32_t print_delay = 1000000;
 
