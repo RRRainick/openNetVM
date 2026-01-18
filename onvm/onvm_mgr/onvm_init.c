@@ -61,6 +61,7 @@ struct rte_mempool *pktmbuf_pool;
 struct rte_mempool *nf_init_cfg_pool;
 struct rte_mempool *nf_msg_pool;
 struct rte_ring *incoming_msg_queue;
+struct rte_ring *cache_req_msg_queue;
 uint16_t **services;
 uint16_t *nf_per_service_count;
 struct onvm_service_chain *default_chain;
@@ -88,6 +89,9 @@ init_shared_sem(void);
 
 static int
 init_info_queue(void);
+
+static int
+init_cache_req_queue(void);
 
 static void
 check_all_ports_link_status(uint8_t port_num, uint32_t port_mask);
@@ -240,6 +244,9 @@ init(int argc, char *argv[]) {
 
         /* initialise a queue for newly created NFs */
         init_info_queue();
+
+        /* initialise a queue for NF manager */
+        init_cache_req_queue();
 
         /* initialise the shared memory for shared core mode */
         init_shared_sem();
@@ -470,6 +477,20 @@ init_info_queue(void) {
                 rte_exit(EXIT_FAILURE, "Cannot create incoming msg queue\n");
 
         return 0;
+}
+
+/**
+ * Allocate a rte_ring for NF manager
+ */
+static int
+init_cache_req_queue(void) {
+        cache_req_msg_queue = rte_ring_create(_MGR_CACHE_REQ_MSG_QUEUE_NAME, MAX_NFS, rte_socket_id(),
+                                             RING_F_SP_ENQ | RING_F_SC_DEQ); // SP enqueue, SC dequeue
+        if (cache_req_msg_queue == NULL)
+                rte_exit(EXIT_FAILURE, "Cannot create cachereq msg queue\n");
+
+        return 0;
+
 }
 
 /* Check the link status of all ports in up to 9s, and print them finally */

@@ -71,6 +71,13 @@ void
 onvm_nf_check_status(void);
 
 /*
+ * Interface looking through all registered NFs if one needs to start or stop.
+ *
+ */
+void
+onvm_nf_check_cache_req(int sockfd);
+
+/*
  * Interface to send a message to a certain NF.
  *
  * Input  : The destination NF instance ID, a constant denoting the message type

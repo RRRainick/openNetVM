@@ -190,12 +190,9 @@ master_thread_main(void) {
 static int
 msg_thread_main(__attribute__((unused)) void *arg) {
         unsigned cur_lcore = rte_lcore_id();
-        char buf[] = "test message\n";
         RTE_LOG(INFO, APP, "Socket %d, Core %d: Running MSG thread\n", rte_socket_id(), cur_lcore);
         while (worker_keep_running) {
-                if (send(sockfd, buf, sizeof(buf), MSG_NOSIGNAL) < 0)
-                        RTE_LOG(INFO, APP, "Can't send message\n");
-                sleep(1);
+                onvm_nf_check_cache_req(sockfd);
         }
         RTE_LOG(INFO, APP, "Socket %d, Core %d: MSG thread done\n", rte_socket_id(), rte_lcore_id());
         return 0;
