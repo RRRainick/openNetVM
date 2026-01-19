@@ -79,8 +79,7 @@ onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta
                         break;
                 default: /* match */
                         delta = meta->win_idx - data->win_idx;
-                        RTE_LOG(INFO, APP, "meta->win_idx: %u, meta->min_mpw: %u, data->win_idx: %u\n", meta->win_idx,
-                                meta->min_mpw, data->win_idx);
+                        RTE_LOG(INFO, APP, "meta->win_idx: %u, data->win_idx: %u\n", meta->win_idx, data->win_idx);
                         if (delta > 0) {
                                 if (delta == 1) { /* update cycle reached */
                                         meta->min_mpw = RTE_MIN(meta->min_mpw, data->mpw);
@@ -93,9 +92,10 @@ onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta
                                 data->mpw = 1;
                         }
                         else {                   /* delta == 0 */
-                                meta->min_mpw = 0; /* only one packet trigger cache request */
+                                meta->min_mpw = 0; /* limit cache_req rate at 1 pps at most */
                                 data->mpw++;
                         }
+                        RTE_LOG(INFO, APP, "meta->min_mpw: %u \n", meta->min_mpw);
                         break;
         }
 
