@@ -62,6 +62,9 @@
 match_t dmt_nf_match_field = BITMAP_L3DST;
 match_t dmt_nf_rewrite_field = BITMAP_L2DST;
 
+static uint16_t destination;
+static uint8_t dest_action;
+
 /* number of package between each print */
 static uint32_t print_delay = 1000000;
 
@@ -74,6 +77,8 @@ usage(const char *progname) {
         printf("%s [EAL args] -- [NF_LIB args] -- -p <print_delay>\n", progname);
         printf("%s -F <CONFIG_FILE.json> [EAL args] -- [NF_LIB args] -- [NF args]\n\n", progname);
         printf("Flags:\n");
+        printf(" - `-d DST`: Destination Service ID to forward to\n");
+        printf(" - `-t DST`: Destination Port ID to forward to\n");
         printf(" - `-p <print_delay>`: number of packets between each print, e.g. `-p 1` prints every packets.\n");
 }
 
@@ -83,9 +88,21 @@ usage(const char *progname) {
 static int
 parse_app_args(int argc, char *argv[], const char *progname) {
         int c;
+        int dst_flag = 0;
+        int port_flag = 0;
 
-        while ((c = getopt(argc, argv, "p:")) != -1) {
+        while ((c = getopt(argc, argv, "d:p:t:")) != -1) {
                 switch (c) {
+                        case 'd':
+                                destination = strtoul(optarg, NULL, 10);
+                                dest_action = ONVM_NF_ACTION_TONF;
+                                dst_flag = 1;
+                                break;
+                        case 't':
+                                destination = strtoul(optarg, NULL, 10);
+                                dest_action = ONVM_NF_ACTION_OUT;
+                                port_flag = 1;
+                                break;
                         case 'p':
                                 print_delay = strtoul(optarg, NULL, 10);
                                 break;
@@ -102,6 +119,16 @@ parse_app_args(int argc, char *argv[], const char *progname) {
                                 usage(progname);
                                 return -1;
                 }
+        }
+
+        if (dst_flag && port_flag) {
+                RTE_LOG(INFO, APP, "%s -d and -t options are mutually exclusive.\n", NF_TAG);
+                return -1;
+        }
+
+        if (!dst_flag && !port_flag) {
+                RTE_LOG(INFO, APP, "%s requires a destination NF with the -d flag or a port with the -t flag.\n", NF_TAG);
+                return -1;
         }
         return optind;
 }
@@ -143,24 +170,20 @@ do_stats_display(struct rte_mbuf *pkt) {
 }
 
 static int
-packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, struct onvm_nf_local_ctx *nf_local_ctx) {
+packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, __attribute__((unused))struct onvm_nf_local_ctx *nf_local_ctx) {
         static uint32_t counter = 0;
-        struct onvm_dmt_nf_info *info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
+        // struct onvm_dmt_nf_info *info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
 
         if (counter++ == print_delay) {
                 do_stats_display(pkt);
                 counter = 0;
         }
 
-        if (pkt->port == 0) {
-                meta->destination = 1;
-                onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
-                onvm_nflib_dmt_synthesize_bitmap(info, meta);
-                onvm_nflib_dmt_print_bitmap(meta);
-        } else {
-                meta->destination = 0;
-        }
-        meta->action = ONVM_NF_ACTION_OUT;
+        // onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
+        // onvm_nflib_dmt_synthesize_bitmap(info, meta);
+        // onvm_nflib_dmt_print_bitmap(meta);
+        meta->action = dest_action;
+        meta->destination = destination;
         return 0;
 }
 

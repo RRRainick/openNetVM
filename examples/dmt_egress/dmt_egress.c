@@ -56,9 +56,13 @@
 
 #include "onvm_common.h"
 #include "onvm_nflib.h"
+#include "onvm_nflib_dmt.h"
 #include "onvm_pkt_helper.h"
 
 #define NF_TAG "dmt_egress"
+
+static uint16_t destination;
+static uint8_t dest_action;
 
 /* number of package between each print */
 static uint32_t print_delay = 1000000;
@@ -75,6 +79,8 @@ usage(const char *progname) {
         printf("%s [EAL args] -- [NF_LIB args] -- -p <print_delay>\n", progname);
         printf("%s -F <CONFIG_FILE.json> [EAL args] -- [NF_LIB args] -- [NF args]\n\n", progname);
         printf("Flags:\n");
+        printf(" - `-d DST`: Destination Service ID to forward to\n");
+        printf(" - `-t DST`: Destination Port ID to forward to\n");
         printf(" - `-p <print_delay>`: number of packets between each print, e.g. `-p 1` prints every packets.\n");
 }
 
@@ -84,9 +90,21 @@ usage(const char *progname) {
 static int
 parse_app_args(int argc, char *argv[], const char *progname) {
         int c;
+        int dst_flag = 0;
+        int port_flag = 0;
 
-        while ((c = getopt(argc, argv, "p:")) != -1) {
+        while ((c = getopt(argc, argv, "d:p:t:")) != -1) {
                 switch (c) {
+                        case 'd':
+                                destination = strtoul(optarg, NULL, 10);
+                                dest_action = ONVM_NF_ACTION_TONF;
+                                dst_flag = 1;
+                                break;
+                        case 't':
+                                destination = strtoul(optarg, NULL, 10);
+                                dest_action = ONVM_NF_ACTION_OUT;
+                                port_flag = 1;
+                                break;
                         case 'p':
                                 print_delay = strtoul(optarg, NULL, 10);
                                 break;
@@ -103,6 +121,16 @@ parse_app_args(int argc, char *argv[], const char *progname) {
                                 usage(progname);
                                 return -1;
                 }
+        }
+
+        if (dst_flag && port_flag) {
+                RTE_LOG(INFO, APP, "%s -d and -t options are mutually exclusive.\n", NF_TAG);
+                return -1;
+        }
+
+        if (!dst_flag && !port_flag) {
+                RTE_LOG(INFO, APP, "%s requires a destination NF with the -d flag or a port with the -t flag.\n", NF_TAG);
+                return -1;
         }
         return optind;
 }
@@ -185,6 +213,7 @@ main(int argc, char *argv[]) {
 
         nf_function_table = onvm_nflib_init_nf_function_table();
         nf_function_table->pkt_handler = &packet_handler;
+        nf_function_table->setup = &onvm_nflib_dmt_nf_setup;
 
         if ((arg_offset = onvm_nflib_init(argc, argv, NF_TAG, nf_local_ctx, nf_function_table)) < 0) {
                 onvm_nflib_stop(nf_local_ctx);
@@ -206,6 +235,7 @@ main(int argc, char *argv[]) {
 
         onvm_nflib_run(nf_local_ctx);
 
+        onvm_nflib_dmt_nf_cleanup(nf_local_ctx);
         onvm_nflib_stop(nf_local_ctx);
         printf("If we reach here, program is ending\n");
         return 0;
