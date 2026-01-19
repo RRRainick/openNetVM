@@ -47,7 +47,9 @@
 ******************************************************************************/
 
 #include "onvm_nf.h"
+#include "onvm_common.h"
 #include "onvm_mgr.h"
+#include "onvm_mgr/onvm_init.h"
 #include "onvm_stats.h"
 #include <rte_lpm.h>
 
@@ -228,7 +230,37 @@ onvm_nf_check_status(void) {
                                         onvm_stats_gen_event_info("NF Stopping", ONVM_EVENT_NF_STOP, &stop_nf_id);
                                 }
                                 break;
+                        case MSG_REQUEST_CACHE:
+                                rte_ring_enqueue(cache_req_msg_queue, ( void * )msg);
+                                goto END;
                 }
+
+                rte_mempool_put(nf_msg_pool, (void *)msg);
+END:;
+        }
+}
+
+void
+onvm_nf_check_cache_req(int sockfd) {
+        int i;
+        void *msgs[MAX_NFS];
+        struct onvm_nf_msg *msg;
+        struct cache_request *req_cache;
+        int num_msgs = rte_ring_count(cache_req_msg_queue);
+
+        if (num_msgs == 0)
+                return;
+
+        if (rte_ring_dequeue_bulk(cache_req_msg_queue, msgs, num_msgs, NULL) == 0)
+                return;
+
+        for (i = 0; i < num_msgs; i++) {
+                msg = (struct onvm_nf_msg *)msgs[i];
+                req_cache = (struct cache_request *)msg->msg_data;
+                req_cache->status = 0;
+                RTE_LOG(INFO, APP, "Received CACHEREQ message\n");
+                if (send(sockfd, req_cache, sizeof(struct cache_request), MSG_NOSIGNAL) < 0)
+                        RTE_LOG(INFO, APP, "Can't send message\n");
 
                 rte_mempool_put(nf_msg_pool, (void *)msg);
         }

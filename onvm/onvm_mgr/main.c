@@ -47,8 +47,12 @@
 
 ******************************************************************************/
 
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <stdint.h>
+#include <sys/socket.h>
 
 #include "onvm_dmt_types.h"
 #include "onvm_mgr.h"
@@ -60,6 +64,8 @@
 /****************************Internal Declarations****************************/
 
 #define MAX_SHUTDOWN_ITERS 10
+#define DMT_SERVER_ADDR "127.0.0.1"
+#define DMT_SERVER_PORT 1234
 
 // True as long as the main thread loop should keep running
 static uint8_t main_keep_running = 1;
@@ -68,10 +74,13 @@ static uint8_t main_keep_running = 1;
 // race the stats display to be able to print, so keep this varable separate
 static uint8_t worker_keep_running = 1;
 
+static int sockfd = 0;
+
 /* Update by timer */
 win_idx_t global_win_idx = 0;
 #define TIMER_INIT_OFFSET_SEC 5
 #define TIMER_INTERVAL_SEC 1
+
 
 static void
 handle_signal(int sig);
@@ -180,6 +189,21 @@ master_thread_main(void) {
         }
 
         RTE_LOG(INFO, APP, "Socket %d, Core %d: Master thread done\n", rte_socket_id(), rte_lcore_id());
+}
+
+/*
+ * Msg thread
+ */
+
+static int
+msg_thread_main(__attribute__((unused)) void *arg) {
+        unsigned cur_lcore = rte_lcore_id();
+        RTE_LOG(INFO, APP, "Socket %d, Core %d: Running MSG thread\n", rte_socket_id(), cur_lcore);
+        while (worker_keep_running) {
+                onvm_nf_check_cache_req(sockfd);
+        }
+        RTE_LOG(INFO, APP, "Socket %d, Core %d: MSG thread done\n", rte_socket_id(), rte_lcore_id());
+        return 0;
 }
 
 /*
@@ -375,6 +399,34 @@ dmt_init_timer(void) {
         return ret;
 }
 
+/*
+ * Function to initialize and start connection to server
+ */
+static int
+dmt_init_connection(const char *s_addr, uint16_t port) {
+        struct sockaddr_in server_addr;
+        int sockfd;
+        int ret = 0;
+
+        memset(&server_addr, 0, sizeof(struct sockaddr_in));
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(port);
+        server_addr.sin_addr.s_addr = inet_addr(s_addr);
+
+        if ((ret = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+              return ret;
+
+        sockfd = ret;
+        RTE_LOG(INFO, APP, "Socket initialized. SocketID: %d\n", sockfd);
+
+        if ((ret = connect(sockfd, (struct sockaddr *)(&server_addr), sizeof(struct sockaddr))) < 0)
+              return ret;
+
+        RTE_LOG(INFO, APP, "Connect to %s:%uint16_t\n", s_addr, port);
+
+        return sockfd;
+}
+
 /*******************************Main function*********************************/
 int
 main(int argc, char *argv[]) {
@@ -418,6 +470,7 @@ main(int argc, char *argv[]) {
         if (ONVM_NF_SHARE_CORES)
                 RTE_LOG(INFO, APP, "%d cores available for handling wakeup\n", wakeup_lcores);
         RTE_LOG(INFO, APP, "%d cores available for handling stats\n", 1);
+        RTE_LOG(INFO, APP, "%d cores available for handling msg\n", 1);
 
         /* Evenly assign NFs to TX threads */
 
@@ -444,7 +497,20 @@ main(int argc, char *argv[]) {
 
         if (dmt_init_timer() < 0) {
                 RTE_LOG(ERR, APP, "Can't start timer");
-                goto onvm_free;
+                goto error;
+        }
+        if ((sockfd = dmt_init_connection(DMT_SERVER_ADDR, DMT_SERVER_PORT)) < 0) {
+                RTE_LOG(ERR, APP, "Can't connect to server.\n");
+                goto error;
+        }
+
+        /* Launch message thread */
+        cur_lcore = rte_get_next_lcore(cur_lcore, 1, 1);
+        if (rte_eal_remote_launch(msg_thread_main, NULL, cur_lcore) == -EBUSY) {
+                RTE_LOG(ERR, APP, "Socket %d, Core %d is already busy, can't use for MSG thread\n",
+                        rte_socket_id(), cur_lcore);
+                onvm_main_free(tx_lcores, rx_lcores, tx_mgr, rx_mgr, wakeup_ctx);
+                return -1;
         }
 
         for (i = 0; i < tx_lcores; i++) {
@@ -521,10 +587,13 @@ main(int argc, char *argv[]) {
         /* Master thread handles statistics and NF management */
         master_thread_main();
         onvm_main_free(tx_lcores,rx_lcores, tx_mgr, rx_mgr, wakeup_ctx);
+        close(sockfd);
         return 0;
 
 onvm_free:
         RTE_LOG(ERR, APP, "Can't allocate required struct.\n");
         onvm_main_free(tx_lcores,rx_lcores, tx_mgr, rx_mgr, wakeup_ctx);
+        close(sockfd);
+error:
         return -1;
 }

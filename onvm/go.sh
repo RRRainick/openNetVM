@@ -3,10 +3,10 @@
 function usage {
         echo "$0 -k PORTMASK -n NF-COREMASK [-m MANAGER CORES] [-r NUM-SERVICES] [-d DEFAULT-SERVICE] [-s STATS-OUTPUT] [-p WEB-PORT-NUMBER] [-z STATS-SLEEP-TIME]"
         # this works well on our 2x6-core nodes
-        echo "$0 -k 3 -n 0xF0 --> cores 0,1,2, with ports 0 and 1, with NFs running on cores 4,5,6,7"
+        echo "$0 -k 3 -n 0xF0 --> cores 0,1,2,3, with ports 0 and 1, with NFs running on cores 4,5,6,7"
         echo -e "\tBy default, cores will be used as follows in numerical order:"
-        echo -e "\t\tRX thread, TX thread, ..., TX thread for last NF, Stats thread"
-        echo -e "$0 -k 3 -n 0xF0 -m 2,3,4"
+        echo -e "\t\tStats thread, Msg thread, TX thread, ..., TX thread for last NF, RX thread"
+        echo -e "$0 -k 3 -n 0xF0 -m 2,3,4,5"
         echo -e "\tRuns ONVM the same way as above, but manually configures cores 2, 3 and 4 to be used as stated"
         echo -e "$0 -k 3 -n 0xF0 -m 2,3,4 -s web"
         echo -e "\tRuns ONVM the same way as above, but prints statistics to the web browser"
@@ -200,13 +200,13 @@ fi
 # Check for CPU core flag
 if [ -z "$cpu" ]
 then
-    echo "INFO: Using default CPU cores 0,1,2"
+    echo "INFO: Using default CPU cores 0,1,2,3"
     echo ""
-    cpu="0,1,2"
+    cpu="0,1,2,3"
 # Check CPU cores
 elif [[ ! $cpu =~ $core_check ]]
 then
-    echo "Error: Invalid CPU cores. openNetVM accepts 3 or more cores. Check input and try again."
+    echo "Error: Invalid CPU cores. openNetVM accepts 4 or more cores. Check input and try again."
     echo ""
     usage
 fi

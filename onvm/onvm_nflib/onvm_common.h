@@ -360,6 +360,11 @@ struct onvm_service_chain {
         int ref_cnt;
 };
 
+struct cache_request {
+        uint8_t unused;
+        int status;
+};
+
 struct lpm_request {
         char name[64];
         uint32_t max_num_rules;
@@ -391,6 +396,7 @@ struct ft_request {
 #define MZ_FTP_INFO "MProc_ftp_info"
 
 #define _MGR_MSG_QUEUE_NAME "MSG_MSG_QUEUE"
+#define _MGR_CACHE_REQ_MSG_QUEUE_NAME "MSG_CACHE_REQ_MSG_QUEUE"
 #define _NF_MSG_QUEUE_NAME "NF_%u_MSG_QUEUE"
 #define _NF_MEMPOOL_NAME "NF_INFO_MEMPOOL"
 #define _NF_MSG_POOL_NAME "NF_MSG_MEMPOOL"
@@ -415,6 +421,7 @@ struct ft_request {
 #define NF_CORE_BUSY 12           // The manually selected core is busy
 #define NF_WAITING_FOR_LPM 13     // NF is waiting for a LPM request to be fulfilled
 #define NF_WAITING_FOR_FT 14      // NF is waiting for a flow-table request to be fulfilled
+#define NF_WAITING_FOR_CACHE 15      // NF is waiting for a flow-table request to be fulfilled
 
 #define NF_NO_ID -1
 

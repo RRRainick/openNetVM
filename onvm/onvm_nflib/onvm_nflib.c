@@ -54,6 +54,8 @@
 #include <signal.h>
 
 /******************************DPDK libraries*********************************/
+#include "onvm_common.h"
+#include "onvm_msg_common.h"
 #include "rte_malloc.h"
 
 /*****************************Internal headers********************************/
@@ -259,6 +261,33 @@ onvm_nflib_init_nf_function_table(void) {
                 rte_exit(EXIT_FAILURE, "Failed to allocate memory for NF context\n");
 
         return nf_function_table;
+}
+
+int
+onvm_nflib_request_cache(struct cache_request *cache_req)
+{
+        struct onvm_nf_msg *request_message;
+        int ret;
+
+        ret = rte_mempool_get(nf_msg_pool, (void**)(&request_message));
+        if (ret != 0) return ret;
+
+        request_message->msg_type = MSG_REQUEST_CACHE;
+        request_message->msg_data = cache_req;
+
+        ret = rte_ring_enqueue(mgr_msg_queue, request_message);
+        if (ret < 0) {
+                rte_mempool_put(nf_msg_pool, request_message);
+                return ret;
+        }
+
+        cache_req->status = NF_WAITING_FOR_CACHE;
+        for (; cache_req->status == (uint16_t) NF_WAITING_FOR_CACHE;) {
+                sleep(1);
+        }
+
+        rte_mempool_put(nf_msg_pool, request_message);
+        return cache_req->status;
 }
 
 int
