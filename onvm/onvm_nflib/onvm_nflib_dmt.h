@@ -39,8 +39,23 @@ onvm_nflib_dmt_synthesize_bitmap(struct onvm_dmt_nf_info *info, struct onvm_pkt_
  * NF should define their own dmt_nf_match_field and dmt_nf_rewrite_field.
  * 0x0 if not defined
  */
-void onvm_nflib_dmt_nf_setup(struct onvm_nf_local_ctx *nf_local_ctx);
+void
+onvm_nflib_dmt_nf_setup(struct onvm_nf_local_ctx *nf_local_ctx);
 
-void onvm_nflib_dmt_nf_cleanup(struct onvm_nf_local_ctx *nf_local_ctx);
+void
+onvm_nflib_dmt_nf_cleanup(struct onvm_nf_local_ctx *nf_local_ctx);
+
+void
+onvm_nflib_dmt_record_match_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta);
+
+void
+onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta);
+
+
+bool
+onvm_nflib_dmt_do_cache(struct onvm_pkt_meta *meta, const mpw_t mpw_threshold);
+
+void
+onvm_nflib_dmt_format_cache_req(struct onvm_pkt_meta *meta, struct cache_request *cache_req);
 
 #endif // _ONVM_NFLIB_DMT_H_

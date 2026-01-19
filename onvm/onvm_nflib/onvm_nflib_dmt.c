@@ -1,7 +1,10 @@
 #include <rte_common.h>
 #include <rte_ip.h>
+#include <rte_tcp.h>
+#include <rte_udp.h>
 #include <rte_malloc.h>
 #include <rte_mbuf.h>
+#include <rte_memcpy.h>
 #include <rte_log.h>
 #include <errno.h>
 
@@ -165,4 +168,84 @@ onvm_nflib_dmt_synthesize_bitmap(struct onvm_dmt_nf_info *info, struct onvm_pkt_
                         }
                 }
         }
+}
+
+void
+onvm_nflib_dmt_record_match_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta) {
+        struct rte_ipv4_hdr *ipv4 = onvm_pkt_ipv4_hdr(pkt);
+        if (ipv4) {
+                meta->match_data.inet4_saddr = ipv4->src_addr;
+                meta->match_data.inet4_daddr = ipv4->dst_addr;
+        }
+
+        if (onvm_pkt_is_tcp(pkt)) {
+                struct rte_tcp_hdr *tcp = onvm_pkt_tcp_hdr(pkt);
+                if (tcp) {
+                        meta->match_data.inet_sport = tcp->src_port;
+                        meta->match_data.inet_dport = tcp->dst_port;
+                }
+        } else if (onvm_pkt_is_udp(pkt)) {
+                struct rte_udp_hdr *udp = onvm_pkt_udp_hdr(pkt);
+                if (udp) {
+                        meta->match_data.inet_sport = udp->src_port;
+                        meta->match_data.inet_dport = udp->dst_port;
+                }
+        }
+}
+
+void
+onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta) {
+        struct rte_ether_hdr *eth = onvm_pkt_ether_hdr(pkt);
+        if (eth) {
+                rte_ether_addr_copy(&eth->s_addr, &meta->rewrite_data.eth_saddr);
+                rte_ether_addr_copy(&eth->d_addr, &meta->rewrite_data.eth_daddr);
+        }
+
+        struct rte_ipv4_hdr *ipv4 = onvm_pkt_ipv4_hdr(pkt);
+        if (ipv4) {
+                meta->rewrite_data.inet4_saddr = ipv4->src_addr;
+                meta->rewrite_data.inet4_daddr = ipv4->dst_addr;
+                meta->rewrite_data.proto = ipv4->next_proto_id;
+        }
+
+        if (onvm_pkt_is_tcp(pkt)) {
+                struct rte_tcp_hdr *tcp = onvm_pkt_tcp_hdr(pkt);
+                if (tcp) {
+                        meta->rewrite_data.inet_sport = tcp->src_port;
+                        meta->rewrite_data.inet_dport = tcp->dst_port;
+                }
+        } else if (onvm_pkt_is_udp(pkt)) {
+                struct rte_udp_hdr *udp = onvm_pkt_udp_hdr(pkt);
+                if (udp) {
+                        meta->rewrite_data.inet_sport = udp->src_port;
+                        meta->rewrite_data.inet_dport = udp->dst_port;
+                }
+        }
+
+        meta->rewrite_data.out_port = pkt->port;
+}
+
+bool
+onvm_nflib_dmt_do_cache(struct onvm_pkt_meta *meta, const mpw_t mpw_threshold) {
+        return meta->min_mpw > mpw_threshold && meta->min_mpw != MPW_MAX;
+}
+
+void
+onvm_nflib_dmt_format_cache_req(struct onvm_pkt_meta *meta, struct cache_request *cache_req) {
+        struct cache_data *data = &cache_req->cache_data;
+        rewrite_t i;
+
+        memset(data, 0, sizeof(struct cache_data));
+
+        for (i = 0; i < REWRITE_LEN; i++) {
+                if (meta->bitmap[i] != 0) {
+                        data->match_field |= meta->bitmap[i];
+                        data->rewrite_field = ONVM_SET_BIT(data->rewrite_field, i);
+                }
+        }
+
+        data->match_data = meta->match_data;
+        data->rewrite_data = meta->rewrite_data;
+
+        data->proto = meta->rewrite_data.proto;
 }

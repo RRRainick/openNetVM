@@ -117,6 +117,8 @@ struct onvm_pkt_meta {
         win_idx_t win_idx;
         mpw_t min_mpw;
         match_t bitmap[REWRITE_LEN];
+        struct dmt_match_data match_data;
+        struct dmt_rewrite_data rewrite_data;
 };
 
 static inline struct onvm_pkt_meta *
@@ -361,7 +363,7 @@ struct onvm_service_chain {
 };
 
 struct cache_request {
-        uint8_t unused;
+        struct cache_data cache_data;
         int status;
 };
 

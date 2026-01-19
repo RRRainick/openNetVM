@@ -48,6 +48,7 @@
 
 #include "onvm_nf.h"
 #include "onvm_common.h"
+#include "onvm_dmt_types.h"
 #include "onvm_mgr.h"
 #include "onvm_mgr/onvm_init.h"
 #include "onvm_stats.h"
@@ -246,6 +247,7 @@ onvm_nf_check_cache_req(int sockfd) {
         void *msgs[MAX_NFS];
         struct onvm_nf_msg *msg;
         struct cache_request *req_cache;
+        struct cache_data *data_cache;
         int num_msgs = rte_ring_count(cache_req_msg_queue);
 
         if (num_msgs == 0)
@@ -258,8 +260,9 @@ onvm_nf_check_cache_req(int sockfd) {
                 msg = (struct onvm_nf_msg *)msgs[i];
                 req_cache = (struct cache_request *)msg->msg_data;
                 req_cache->status = 0;
+                data_cache = (struct cache_data *)&req_cache->cache_data;
                 RTE_LOG(INFO, APP, "Received CACHEREQ message\n");
-                if (send(sockfd, req_cache, sizeof(struct cache_request), MSG_NOSIGNAL) < 0)
+                if (send(sockfd, data_cache, sizeof(struct cache_data), MSG_NOSIGNAL) < 0)
                         RTE_LOG(INFO, APP, "Can't send message\n");
 
                 rte_mempool_put(nf_msg_pool, (void *)msg);
