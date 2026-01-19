@@ -35,7 +35,8 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * dmt_egress.c - send all packets from one port out the other.
+ * dmt_egress.c - record rewrite data, then generate cache_req if min_mpw
+ *   exceed threshold.
  ********************************************************************/
 
 #include <errno.h>
@@ -60,6 +61,11 @@
 #include "onvm_pkt_helper.h"
 
 #define NF_TAG "dmt_egress"
+
+#define CACHE_REQ_THRESHOLD 10
+
+match_t dmt_nf_match_field = 0x0;
+match_t dmt_nf_rewrite_field = 0x0;
 
 static uint16_t destination;
 static uint8_t dest_action;
@@ -175,29 +181,32 @@ static int
 packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
                __attribute__((unused)) struct onvm_nf_local_ctx *nf_local_ctx) {
         static uint32_t counter = 0;
+        struct onvm_dmt_nf_info *info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
 
         if (counter++ == print_delay) {
                 do_stats_display(pkt);
                 counter = 0;
         }
 
-        if (pkt->port == 0) {
-                meta->destination = 1;
-        } else {
-                meta->destination = 0;
+        onvm_nflib_dmt_synthesize_bitmap(info, meta);
+        onvm_nflib_dmt_record_rewrite_data(pkt, meta);
+        if (onvm_pkt_tcp_hdr(pkt)) {
+                onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
         }
 
-        if (onvm_pkt_is_tcp(pkt)) {
-                cache_req = (struct cache_request *) rte_malloc(NULL, sizeof(struct cache_request), 0); /* freed by NF Manager in onvm_nf_check_cache_req */
+        if (onvm_nflib_dmt_do_cache(meta, CACHE_REQ_THRESHOLD)) {
+                cache_req = (struct cache_request *) rte_malloc(NULL, sizeof(struct cache_request), 0);
 
                 if (!cache_req) return 0;
 
-                cache_req->unused = UINT8_MAX;
+                onvm_nflib_dmt_format_cache_req(meta, cache_req);
                 onvm_nflib_request_cache(cache_req);
                 rte_free(cache_req);
         }
 
-        meta->action = ONVM_NF_ACTION_OUT;
+        meta->action = dest_action;
+        meta->destination = destination;
+
         return 0;
 }
 

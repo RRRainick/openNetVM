@@ -35,7 +35,7 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * dmt_ingress.c - send all packets from one port out the other.
+ * dmt_ingress.c - record match data, then forward packet to destination NF
  ********************************************************************/
 
 #include <errno.h>
@@ -60,8 +60,8 @@
 
 #define NF_TAG "dmt_ingress"
 
-match_t dmt_nf_match_field = BITMAP_L3DST | BITMAP_L4DST;
-match_t dmt_nf_rewrite_field = BITMAP_L3DST | BITMAP_L4DST;
+match_t dmt_nf_match_field = 0;
+match_t dmt_nf_rewrite_field = 0;
 
 static uint16_t destination;
 static uint8_t dest_action;
@@ -174,16 +174,19 @@ static int
 packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
                __attribute__((unused)) struct onvm_nf_local_ctx *nf_local_ctx) {
         static uint32_t counter = 0;
-        // struct onvm_dmt_nf_info *info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
+        struct onvm_dmt_nf_info *info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
 
         if (counter++ == print_delay) {
                 do_stats_display(pkt);
                 counter = 0;
         }
 
-        // onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
-        // onvm_nflib_dmt_synthesize_bitmap(info, meta);
-        // onvm_nflib_dmt_print_bitmap(meta);
+        onvm_nflib_dmt_record_match_data(pkt, meta);
+        onvm_nflib_dmt_synthesize_bitmap(info, meta);
+        if (onvm_pkt_tcp_hdr(pkt)) {
+                onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
+        }
+
         meta->action = dest_action;
         meta->destination = destination;
 
