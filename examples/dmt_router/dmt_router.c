@@ -59,8 +59,8 @@
 
 #define NF_TAG "dmt_router"
 
-match_t dmt_nf_match_field = 0x01;
-rewrite_t dmt_nf_rewrite_field = 0x01;
+match_t dmt_nf_match_field = BITMAP_L3DST;
+match_t dmt_nf_rewrite_field = BITMAP_L2DST;
 
 /* number of package between each print */
 static uint32_t print_delay = 1000000;
@@ -155,6 +155,8 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, struct onvm_nf_
         if (pkt->port == 0) {
                 meta->destination = 1;
                 onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
+                onvm_nflib_dmt_synthesize_bitmap(info, meta);
+                onvm_nflib_dmt_print_bitmap(meta);
         } else {
                 meta->destination = 0;
         }
