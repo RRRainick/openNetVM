@@ -44,7 +44,7 @@ struct dmt_match_data {
         };
         uint16_t inet_sport;
         uint16_t inet_dport;
-};
+}__attribute__((packed));
 
 struct dmt_rewrite_data {
         union {
@@ -60,7 +60,7 @@ struct dmt_rewrite_data {
         uint8_t out_port;
         uint8_t dec_ttl;
         struct rte_ether_addr eth_daddr;
-};
+}__attribute__((packed));
 
 /* cache_req data */
 struct cache_data {
@@ -71,6 +71,6 @@ struct cache_data {
         struct dmt_match_data match_data;
         struct dmt_rewrite_data rewrite_data;
         uint8_t proto;
-};
+}__attribute__((packed));
 
 #endif  // _ONVM_DMT_TYPES_H_
