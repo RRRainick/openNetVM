@@ -1,4 +1,5 @@
 #include <rte_common.h>
+#include <rte_byteorder.h>
 #include <rte_ip.h>
 #include <rte_tcp.h>
 #include <rte_udp.h>
@@ -174,21 +175,21 @@ void
 onvm_nflib_dmt_record_match_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta) {
         struct rte_ipv4_hdr *ipv4 = onvm_pkt_ipv4_hdr(pkt);
         if (ipv4) {
-                meta->match_data.inet4_saddr = ipv4->src_addr;
-                meta->match_data.inet4_daddr = ipv4->dst_addr;
+                meta->match_data.inet4_saddr = rte_be_to_cpu_32(ipv4->src_addr);
+                meta->match_data.inet4_daddr = rte_be_to_cpu_32(ipv4->dst_addr);
         }
 
         if (onvm_pkt_is_tcp(pkt)) {
                 struct rte_tcp_hdr *tcp = onvm_pkt_tcp_hdr(pkt);
                 if (tcp) {
-                        meta->match_data.inet_sport = tcp->src_port;
-                        meta->match_data.inet_dport = tcp->dst_port;
+                        meta->match_data.inet_sport = rte_be_to_cpu_16(tcp->src_port);
+                        meta->match_data.inet_dport = rte_be_to_cpu_16(tcp->dst_port);
                 }
         } else if (onvm_pkt_is_udp(pkt)) {
                 struct rte_udp_hdr *udp = onvm_pkt_udp_hdr(pkt);
                 if (udp) {
-                        meta->match_data.inet_sport = udp->src_port;
-                        meta->match_data.inet_dport = udp->dst_port;
+                        meta->match_data.inet_sport = rte_be_to_cpu_16(udp->src_port);
+                        meta->match_data.inet_dport = rte_be_to_cpu_16(udp->dst_port);
                 }
         }
 }
@@ -203,22 +204,22 @@ onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *m
 
         struct rte_ipv4_hdr *ipv4 = onvm_pkt_ipv4_hdr(pkt);
         if (ipv4) {
-                meta->rewrite_data.inet4_saddr = ipv4->src_addr;
-                meta->rewrite_data.inet4_daddr = ipv4->dst_addr;
+                meta->rewrite_data.inet4_saddr = rte_be_to_cpu_32(ipv4->src_addr);
+                meta->rewrite_data.inet4_daddr = rte_be_to_cpu_32(ipv4->dst_addr);
                 meta->rewrite_data.proto = ipv4->next_proto_id;
         }
 
         if (onvm_pkt_is_tcp(pkt)) {
                 struct rte_tcp_hdr *tcp = onvm_pkt_tcp_hdr(pkt);
                 if (tcp) {
-                        meta->rewrite_data.inet_sport = tcp->src_port;
-                        meta->rewrite_data.inet_dport = tcp->dst_port;
+                        meta->rewrite_data.inet_sport = rte_be_to_cpu_16(tcp->src_port);
+                        meta->rewrite_data.inet_dport = rte_be_to_cpu_16(tcp->dst_port);
                 }
         } else if (onvm_pkt_is_udp(pkt)) {
                 struct rte_udp_hdr *udp = onvm_pkt_udp_hdr(pkt);
                 if (udp) {
-                        meta->rewrite_data.inet_sport = udp->src_port;
-                        meta->rewrite_data.inet_dport = udp->dst_port;
+                        meta->rewrite_data.inet_sport = rte_be_to_cpu_16(udp->src_port);
+                        meta->rewrite_data.inet_dport = rte_be_to_cpu_16(udp->dst_port);
                 }
         }
 
