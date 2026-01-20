@@ -64,7 +64,7 @@
 /****************************Internal Declarations****************************/
 
 #define MAX_SHUTDOWN_ITERS 10
-#define DMT_SERVER_ADDR "127.0.0.1"
+#define DMT_SERVER_ADDR "192.168.104.87"
 #define DMT_SERVER_PORT 1234
 
 // True as long as the main thread loop should keep running

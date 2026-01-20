@@ -35,12 +35,25 @@ typedef uint8_t rewrite_t;
 #define CACHE_REQ_STATE_DYNAMIC 3
 #define CACHE_REQ_STATE_PAYLOAD 4
 
+#define L3_PROTOCOL_IPV4 0
+#define L3_PROTOCOL_IPV6 1
+#define L3_PROTOCOL_UNKNOWN 2
+#define L4_PROTOCOL_TCP 10
+#define L4_PROTOCOL_UDP 11
+#define L4_PROTOCOL_UNKNOWN 12
+
+struct ipv6_addr {
+        uint8_t  addr[16];
+};
+
 struct dmt_match_data {
         union {
                 uint32_t inet4_saddr;
+                struct ipv6_addr inet6_saddr;
         };
         union {
                 uint32_t inet4_daddr;
+                struct ipv6_addr inet6_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;
@@ -49,9 +62,11 @@ struct dmt_match_data {
 struct dmt_rewrite_data {
         union {
                 uint32_t inet4_saddr;
+                struct ipv6_addr inet6_saddr;
         };
         union {
                 uint32_t inet4_daddr;
+                struct ipv6_addr inet6_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;

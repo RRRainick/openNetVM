@@ -248,5 +248,9 @@ onvm_nflib_dmt_format_cache_req(struct onvm_pkt_meta *meta, struct cache_request
         data->match_data = meta->match_data;
         data->rewrite_data = meta->rewrite_data;
 
-        data->type = meta->rewrite_data.proto;
+        data->type = L3_PROTOCOL_IPV4;
+        data->action = CACHE_REQ_ACTION_INSERT;
+        data->state = CACHE_REQ_STATE_STATELESS;
+        data->rewrite_data.out_port = 137;
+        data->rewrite_data.dec_ttl = 3;
 }
