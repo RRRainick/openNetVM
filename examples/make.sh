@@ -18,7 +18,7 @@ if [[ -n "$ACTION" && "$ACTION" != "clean" ]]; then
   exit 1
 fi
 
-arr=(dmt_{ingress,router,egress})
+arr=(dmt_{ingress,router,egress,server})
 
 for dir in "${arr[@]}"; do
   echo "Processing $dir..."
