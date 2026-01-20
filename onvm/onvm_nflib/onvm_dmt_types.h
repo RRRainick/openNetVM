@@ -70,7 +70,7 @@ struct cache_data {
         rewrite_t rewrite_field;
         struct dmt_match_data match_data;
         struct dmt_rewrite_data rewrite_data;
-        uint8_t proto;
+        uint8_t type;
 }__attribute__((packed));
 
 #endif  // _ONVM_DMT_TYPES_H_

@@ -248,5 +248,5 @@ onvm_nflib_dmt_format_cache_req(struct onvm_pkt_meta *meta, struct cache_request
         data->match_data = meta->match_data;
         data->rewrite_data = meta->rewrite_data;
 
-        data->proto = meta->rewrite_data.proto;
+        data->type = meta->rewrite_data.proto;
 }
