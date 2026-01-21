@@ -41,6 +41,7 @@
 #include "onvm_pkt_helper.h"
 #include "onvm_common.h"
 #include "onvm_pkt_common.h"
+#include "rte_byteorder.h"
 
 #include <inttypes.h>
 
@@ -763,4 +764,53 @@ onvm_pkt_generate_udp(struct rte_mempool* pktmbuf_pool, struct rte_udp_hdr* udp_
         onvm_pkt_set_checksums(pkt);
 
         return pkt;
+}
+
+int
+onvm_pkt_parse(struct rte_mbuf* pkt, struct onvm_pkt_parse_ctx* ctx) {
+        size_t len = 0;
+
+        if (unlikely(pkt == NULL)) {  // We do not expect parse for empty packets
+                goto err;
+        }
+
+        memset(ctx, 0, sizeof(*ctx));
+
+        ctx->eth = rte_pktmbuf_mtod(pkt, struct rte_ether_hdr*);
+        len += sizeof(*ctx->eth);
+        ctx->ether_type = rte_cpu_to_be_16(ctx->eth->ether_type);
+
+        /* Parse L3 layer */
+        switch (ctx->ether_type) {
+                case RTE_ETHER_TYPE_IPV4:
+                        ctx->inet4_hdr = rte_pktmbuf_mtod_offset(pkt, struct rte_ipv4_hdr*, len);
+                        len += sizeof(*ctx->inet4_hdr);
+                        ctx->inet_proto = ctx->inet4_hdr->next_proto_id;
+                        break;
+                case RTE_ETHER_TYPE_IPV6:
+                        ctx->inet6_hdr = rte_pktmbuf_mtod_offset(pkt, struct rte_ipv6_hdr*, len);
+                        len += sizeof(*ctx->inet6_hdr);
+                        ctx->inet_proto = ctx->inet6_hdr->proto;
+                        break;
+                default:
+                        goto err;
+        }
+
+        /* Parse L4 layer */
+        switch (ctx->inet_proto) {
+                case IP_PROTOCOL_TCP:
+                        ctx->tcp_hdr = rte_pktmbuf_mtod_offset(pkt, struct rte_tcp_hdr*, len);
+                        len += sizeof(*ctx->tcp_hdr);
+                        break;
+                case IP_PROTOCOL_UDP:
+                        ctx->udp_hdr = rte_pktmbuf_mtod_offset(pkt, struct rte_udp_hdr*, len);
+                        len += sizeof(*ctx->udp_hdr);
+                        break;
+                default:
+                        goto err;
+        }
+
+        return 0;
+err:
+        return -1;
 }

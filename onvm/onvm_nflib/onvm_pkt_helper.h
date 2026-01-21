@@ -52,6 +52,25 @@ struct rte_tcp_hdr;
 struct rte_udp_hdr;
 struct rte_ipv4_hdr;
 
+struct onvm_pkt_parse_ctx {
+        /* L2 header */
+        struct rte_ether_hdr *eth;
+        /* L3 header */
+        union {
+                struct rte_ipv4_hdr *inet4_hdr;
+                struct rte_ipv6_hdr *inet6_hdr;
+        };
+        /* L4 header */
+        union {
+                struct rte_tcp_hdr *tcp_hdr;
+                struct rte_udp_hdr *udp_hdr;
+        };
+
+        /* Layer protocol flag */
+        uint16_t ether_type; /* cpu byte order */
+        uint8_t inet_proto;
+};
+
 #define IP_PROTOCOL_TCP 6
 #define IP_PROTOCOL_UDP 17
 
@@ -239,5 +258,13 @@ onvm_pkt_generate_udp(struct rte_mempool* pktmbuf_pool, struct rte_udp_hdr* udp_
  */
 struct rte_mbuf*
 onvm_pkt_generate_udp_sample(struct rte_mempool* pktmbuf_pool);
+
+
+/**
+  * Parse packet and store result in context
+  * Return 0 if parse success, else -1
+  */
+int
+onvm_pkt_parse(struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *ctx);
 
 #endif  // _ONVM_PKT_HELPER_H_"
