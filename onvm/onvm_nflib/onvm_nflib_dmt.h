@@ -49,7 +49,7 @@ void
 onvm_nflib_dmt_record_match_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta);
 
 void
-onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta);
+onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, port_t out_port);
 
 
 bool

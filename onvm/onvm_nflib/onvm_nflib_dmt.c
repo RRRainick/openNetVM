@@ -200,7 +200,7 @@ onvm_nflib_dmt_record_match_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *met
 }
 
 void
-onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta) {
+onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, port_t out_port) {
         struct rte_ether_hdr *eth = onvm_pkt_ether_hdr(pkt);
 
         /*
@@ -233,7 +233,7 @@ onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *m
                 }
         }
 
-        meta->rewrite_data.out_port = pkt->port;
+        meta->rewrite_data.out_port = out_port;
 }
 
 bool

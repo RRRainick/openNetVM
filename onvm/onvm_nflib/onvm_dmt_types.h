@@ -25,6 +25,8 @@ typedef uint8_t rewrite_t;
 #define BITMAP_L4_SPROT (0x01 << 5)
 #define BITMAP_L4_DPORT (0x01 << 6)
 
+typedef uint8_t port_t;
+
 /* cache_req action */
 #define CACHE_REQ_ACTION_INSERT 1
 #define CACHE_REQ_ACTION_REMOVE 2
@@ -60,7 +62,7 @@ struct dmt_rewrite_data {
         uint16_t inet_dport;
         uint8_t proto;
         struct rte_ether_addr eth_daddr;
-        uint8_t out_port;
+        port_t out_port; /* out port on p4 switch */
         uint8_t dec_ttl;
         struct rte_ether_addr eth_saddr;
 }__attribute__((packed));
