@@ -34,7 +34,7 @@ void print_cache_data(struct cache_data *data) {
     printf("Received Cache Data:\n");
     printf("Action: %u\n", data->action);
     printf("State: %u\n", data->state);
-    printf("Type: %u\n", data->type);
+    printf("Type: 0x%02X\n", ntohs(data->type));
     printf("Match Field Bitmap: 0x%02X\n", data->match_field);
     printf("Rewrite Field Bitmap: 0x%02X\n", data->rewrite_field);
 
