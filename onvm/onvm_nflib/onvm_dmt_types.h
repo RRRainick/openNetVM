@@ -56,10 +56,10 @@ struct dmt_rewrite_data {
         uint16_t inet_sport;
         uint16_t inet_dport;
         uint8_t proto;
-        struct rte_ether_addr eth_saddr;
+        struct rte_ether_addr eth_daddr;
         uint8_t out_port;
         uint8_t dec_ttl;
-        struct rte_ether_addr eth_daddr;
+        struct rte_ether_addr eth_saddr;
 }__attribute__((packed));
 
 /* cache_req data */
