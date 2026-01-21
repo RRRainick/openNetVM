@@ -66,6 +66,7 @@
 
 match_t dmt_nf_match_field = 0x0;
 match_t dmt_nf_rewrite_field = 0x0;
+port_t out_port = 137;
 
 static uint16_t destination;
 static uint8_t dest_action;
@@ -189,7 +190,7 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
         }
 
         onvm_nflib_dmt_synthesize_bitmap(info, meta);
-        onvm_nflib_dmt_record_rewrite_data(pkt, meta);
+        onvm_nflib_dmt_record_rewrite_data(pkt, meta, out_port);
         if (onvm_pkt_tcp_hdr(pkt)) {
                 onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
         }
