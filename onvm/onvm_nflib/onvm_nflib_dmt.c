@@ -174,6 +174,11 @@ onvm_nflib_dmt_synthesize_bitmap(struct onvm_dmt_nf_info *info, struct onvm_pkt_
 void
 onvm_nflib_dmt_record_match_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta) {
         struct rte_ipv4_hdr *ipv4 = onvm_pkt_ipv4_hdr(pkt);
+
+        /*
+         * normal data type convert to cpu endian.
+         * byte array retain network endian. See setValue function on p4-runtime
+         */
         if (ipv4) {
                 meta->match_data.inet4_saddr = rte_be_to_cpu_32(ipv4->src_addr);
                 meta->match_data.inet4_daddr = rte_be_to_cpu_32(ipv4->dst_addr);
@@ -197,6 +202,11 @@ onvm_nflib_dmt_record_match_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *met
 void
 onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta) {
         struct rte_ether_hdr *eth = onvm_pkt_ether_hdr(pkt);
+
+        /*
+         * normal data type convert to cpu endian.
+         * byte array retain network endian. See setValue function on p4-runtime
+         */
         if (eth) {
                 rte_ether_addr_copy(&eth->s_addr, &meta->rewrite_data.eth_saddr);
                 rte_ether_addr_copy(&eth->d_addr, &meta->rewrite_data.eth_daddr);
@@ -232,7 +242,8 @@ onvm_nflib_dmt_do_cache(struct onvm_pkt_meta *meta, const mpw_t mpw_threshold) {
 }
 
 void
-onvm_nflib_dmt_format_cache_req(struct onvm_pkt_meta *meta, struct cache_request *cache_req) {
+onvm_nflib_dmt_format_cache_req(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, struct cache_request *cache_req) {
+        struct rte_ether_hdr *eth = onvm_pkt_ether_hdr(pkt);
         struct cache_data *data = &cache_req->cache_data;
         rewrite_t i;
 
@@ -248,5 +259,5 @@ onvm_nflib_dmt_format_cache_req(struct onvm_pkt_meta *meta, struct cache_request
         data->match_data = meta->match_data;
         data->rewrite_data = meta->rewrite_data;
 
-        data->type = meta->rewrite_data.proto;
+        data->type = rte_be_to_cpu_16(eth->ether_type);
 }

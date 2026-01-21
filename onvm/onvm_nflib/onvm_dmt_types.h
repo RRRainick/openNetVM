@@ -34,6 +34,9 @@ typedef uint8_t rewrite_t;
 #define CACHE_REQ_STATE_STATIC 2
 #define CACHE_REQ_STATE_DYNAMIC 3
 #define CACHE_REQ_STATE_PAYLOAD 4
+/* cache_req type(ether type) */
+typedef uint16_t type_t;
+#define ETH_TYPE_IPV4 RTE_ETHER_TYPE_IPV4
 
 struct dmt_match_data {
         union {
@@ -70,7 +73,7 @@ struct cache_data {
         rewrite_t rewrite_field;
         struct dmt_match_data match_data;
         struct dmt_rewrite_data rewrite_data;
-        uint8_t type;
+        type_t type;
 }__attribute__((packed));
 
 #endif  // _ONVM_DMT_TYPES_H_

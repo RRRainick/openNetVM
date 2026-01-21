@@ -56,6 +56,6 @@ bool
 onvm_nflib_dmt_do_cache(struct onvm_pkt_meta *meta, const mpw_t mpw_threshold);
 
 void
-onvm_nflib_dmt_format_cache_req(struct onvm_pkt_meta *meta, struct cache_request *cache_req);
+onvm_nflib_dmt_format_cache_req(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, struct cache_request *cache_req);
 
 #endif // _ONVM_NFLIB_DMT_H_
