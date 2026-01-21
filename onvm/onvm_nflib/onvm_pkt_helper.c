@@ -211,6 +211,11 @@ onvm_pkt_is_ipv4(struct rte_mbuf* pkt) {
 }
 
 void
+onvm_pkt_ipv6_addr_copy(const uint8_t a_from[INET6_ADDR_LEN], uint8_t a_to[INET6_ADDR_LEN]) {
+        rte_memcpy(a_to, a_from, INET6_ADDR_LEN);
+}
+
+void
 onvm_pkt_print(struct rte_mbuf* pkt) {
         struct rte_ipv4_hdr* ipv4 = onvm_pkt_ipv4_hdr(pkt);
         if (likely(ipv4 != NULL)) {

@@ -44,6 +44,7 @@
 #include <inttypes.h>
 #include <rte_ether.h>
 #include <rte_mempool.h>
+#include "onvm_dmt_pkt_types.h"
 
 struct port_info;
 struct rte_mbuf;
@@ -125,6 +126,13 @@ onvm_pkt_is_udp(struct rte_mbuf* pkt);
 
 int
 onvm_pkt_is_ipv4(struct rte_mbuf* pkt);
+
+
+/**
+ * Copy ipv6 address
+ */
+void
+onvm_pkt_ipv6_addr_copy(const uint8_t a_from[INET6_ADDR_LEN], uint8_t a_to[INET6_ADDR_LEN]);
 
 /**
  * Print out a packet or header.  Check to be sure DPDK doesn't already do any of these
