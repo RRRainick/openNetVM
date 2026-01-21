@@ -133,6 +133,30 @@ onvm_ft_add_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data) {
         return tbl_index;
 }
 
+/* Add an entry in flow table and set data to point to the new value.
+Returns:
+ index in the array on success
+ -EPROTONOSUPPORT if packet is not ipv4.
+ -EINVAL if the parameters are invalid.
+ -ENOSPC if there is no space in the hash for this key.
+*/
+int
+onvm_ft_add_pkt_parse_ctx(struct onvm_ft *table, struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
+        int32_t tbl_index;
+        struct onvm_ft_inet_5tuple key;
+        int err;
+
+        err = onvm_ft_fill_key_parse_ctx(&key, parse_ctx);
+        if (err < 0) {
+                return err;
+        }
+        tbl_index = rte_hash_add_key_with_hash(table->hash, (const void *)&key, pkt->hash.rss);
+        if (tbl_index >= 0) {
+                *data = &table->data[tbl_index * table->entry_size];
+        }
+        return tbl_index;
+}
+
 /* Lookup an entry in flow table and set data to point to the value.
    Returns:
     index in the array on success
@@ -146,6 +170,29 @@ onvm_ft_lookup_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data) {
         int ret;
 
         ret = onvm_ft_fill_key(&key, pkt);
+        if (ret < 0) {
+                return ret;
+        }
+        tbl_index = rte_hash_lookup_with_hash(table->hash, (const void *)&key, pkt->hash.rss);
+        if (tbl_index >= 0) {
+                *data = onvm_ft_get_data(table, tbl_index);
+        }
+        return tbl_index;
+}
+
+/* Lookup an entry in flow table and set data to point to the value.
+   Returns:
+    index in the array on success
+    -ENOENT if the key is not found.
+    -EINVAL if the parameters are invalid.
+*/
+int
+onvm_ft_lookup_pkt_parse_ctx(struct onvm_ft *table, struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
+        int32_t tbl_index;
+        struct onvm_ft_inet_5tuple key;
+        int ret;
+
+        ret = onvm_ft_fill_key_parse_ctx(&key, parse_ctx);
         if (ret < 0) {
                 return ret;
         }

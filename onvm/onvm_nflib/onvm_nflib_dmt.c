@@ -12,17 +12,18 @@
 #include "onvm_nflib_dmt.h"
 #include "onvm_common.h"
 #include "onvm_dmt_types.h"
+#include "onvm_flow_table.h"
 #include "onvm_pkt_helper.h"
 
 match_t dmt_nf_match_field __attribute__((weak)) = 0x0;
 rewrite_t dmt_nf_rewrite_field __attribute__((weak)) = 0x0;
 
 static int
-onvm_nflib_dmt_add_mpw_entry(struct rte_mbuf *pkt, struct onvm_ft *mpw_table) {
+onvm_nflib_dmt_add_mpw_entry(struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_ft *mpw_table) {
         int idx;
         struct onvm_dmt_mpw_data *data = NULL;
 
-        idx = onvm_ft_add_pkt(mpw_table, pkt, (char **)&data);
+        idx = onvm_ft_add_pkt_parse_ctx(mpw_table, pkt, parse_ctx, (char **)&data);
 
         switch (idx) {
                 case -EPROTONOSUPPORT:
@@ -61,7 +62,7 @@ onvm_nflib_dmt_init_nf_info(struct onvm_nf_local_ctx *nf_local_ctx) {
 
 
 int
-onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, struct onvm_ft *mpw_table, bool hit) {
+onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_pkt_meta *meta, struct onvm_ft *mpw_table, bool hit) {
         int idx;
         struct onvm_dmt_mpw_data *data = NULL;
         win_idx_t delta = 0;
@@ -69,11 +70,11 @@ onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta
         if (!hit)
                 return 0;
 
-        idx = onvm_ft_lookup_pkt(mpw_table, pkt, (char **)&data);
+        idx = onvm_ft_lookup_pkt_parse_ctx(mpw_table, pkt, parse_ctx, (char **)&data);
 
         switch (idx) {
                 case -ENOENT:
-                        onvm_nflib_dmt_add_mpw_entry(pkt, mpw_table);
+                        onvm_nflib_dmt_add_mpw_entry(pkt, parse_ctx, mpw_table);
                         break;
                 case -EINVAL:
                         RTE_LOG(INFO, APP, "Bad argument\n");
