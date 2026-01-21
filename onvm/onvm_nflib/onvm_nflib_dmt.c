@@ -172,65 +172,64 @@ onvm_nflib_dmt_synthesize_bitmap(struct onvm_dmt_nf_info *info, struct onvm_pkt_
 }
 
 void
-onvm_nflib_dmt_record_match_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta) {
-        struct rte_ipv4_hdr *ipv4 = onvm_pkt_ipv4_hdr(pkt);
-
+onvm_nflib_dmt_record_match_data(struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_pkt_meta *meta) {
         /*
          * normal data type convert to cpu endian.
          * byte array retain network endian. See setValue function on p4-runtime
          */
-        if (ipv4) {
-                meta->match_data.inet4_saddr = rte_be_to_cpu_32(ipv4->src_addr);
-                meta->match_data.inet4_daddr = rte_be_to_cpu_32(ipv4->dst_addr);
+        switch (parse_ctx->ether_type) {
+                case RTE_ETHER_TYPE_IPV4:
+                        meta->match_data.inet4_saddr = rte_be_to_cpu_32(parse_ctx->inet4_hdr->src_addr);
+                        meta->match_data.inet4_daddr = rte_be_to_cpu_32(parse_ctx->inet4_hdr->dst_addr);
+                        break;
+                case RTE_ETHER_TYPE_IPV6:
+                        onvm_pkt_ipv6_addr_copy(parse_ctx->inet6_hdr->src_addr, meta->match_data.inet6_saddr);
+                        onvm_pkt_ipv6_addr_copy(parse_ctx->inet6_hdr->dst_addr, meta->match_data.inet6_daddr);
+                        break;
         }
 
-        if (onvm_pkt_is_tcp(pkt)) {
-                struct rte_tcp_hdr *tcp = onvm_pkt_tcp_hdr(pkt);
-                if (tcp) {
-                        meta->match_data.inet_sport = rte_be_to_cpu_16(tcp->src_port);
-                        meta->match_data.inet_dport = rte_be_to_cpu_16(tcp->dst_port);
-                }
-        } else if (onvm_pkt_is_udp(pkt)) {
-                struct rte_udp_hdr *udp = onvm_pkt_udp_hdr(pkt);
-                if (udp) {
-                        meta->match_data.inet_sport = rte_be_to_cpu_16(udp->src_port);
-                        meta->match_data.inet_dport = rte_be_to_cpu_16(udp->dst_port);
-                }
+        switch (parse_ctx->inet_proto) {
+                case IP_PROTOCOL_TCP:
+                        meta->match_data.inet_sport = rte_be_to_cpu_16(parse_ctx->tcp_hdr->src_port);
+                        meta->match_data.inet_dport = rte_be_to_cpu_16(parse_ctx->tcp_hdr->dst_port);
+                        break;
+                case IP_PROTOCOL_UDP:
+                        meta->match_data.inet_sport = rte_be_to_cpu_16(parse_ctx->udp_hdr->src_port);
+                        meta->match_data.inet_dport = rte_be_to_cpu_16(parse_ctx->udp_hdr->dst_port);
+                        break;
         }
 }
 
 void
-onvm_nflib_dmt_record_rewrite_data(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, port_t out_port) {
-        struct rte_ether_hdr *eth = onvm_pkt_ether_hdr(pkt);
-
+onvm_nflib_dmt_record_rewrite_data(struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_pkt_meta *meta, port_t out_port) {
         /*
          * normal data type convert to cpu endian.
          * byte array retain network endian. See setValue function on p4-runtime
          */
-        if (eth) {
-                rte_ether_addr_copy(&eth->s_addr, &meta->rewrite_data.eth_saddr);
-                rte_ether_addr_copy(&eth->d_addr, &meta->rewrite_data.eth_daddr);
+        rte_ether_addr_copy(&parse_ctx->eth->s_addr, &meta->rewrite_data.eth_saddr);
+        rte_ether_addr_copy(&parse_ctx->eth->d_addr, &meta->rewrite_data.eth_daddr);
+
+        switch (parse_ctx->ether_type) {
+                case RTE_ETHER_TYPE_IPV4:
+                        meta->rewrite_data.inet4_saddr = rte_be_to_cpu_32(parse_ctx->inet4_hdr->src_addr);
+                        meta->rewrite_data.inet4_daddr = rte_be_to_cpu_32(parse_ctx->inet4_hdr->dst_addr);
+                        break;
+                case RTE_ETHER_TYPE_IPV6:
+                        onvm_pkt_ipv6_addr_copy(parse_ctx->inet6_hdr->src_addr, meta->rewrite_data.inet6_saddr);
+                        onvm_pkt_ipv6_addr_copy(parse_ctx->inet6_hdr->dst_addr, meta->rewrite_data.inet6_daddr);
+                        break;
         }
 
-        struct rte_ipv4_hdr *ipv4 = onvm_pkt_ipv4_hdr(pkt);
-        if (ipv4) {
-                meta->rewrite_data.inet4_saddr = rte_be_to_cpu_32(ipv4->src_addr);
-                meta->rewrite_data.inet4_daddr = rte_be_to_cpu_32(ipv4->dst_addr);
-                meta->rewrite_data.proto = ipv4->next_proto_id;
-        }
-
-        if (onvm_pkt_is_tcp(pkt)) {
-                struct rte_tcp_hdr *tcp = onvm_pkt_tcp_hdr(pkt);
-                if (tcp) {
-                        meta->rewrite_data.inet_sport = rte_be_to_cpu_16(tcp->src_port);
-                        meta->rewrite_data.inet_dport = rte_be_to_cpu_16(tcp->dst_port);
-                }
-        } else if (onvm_pkt_is_udp(pkt)) {
-                struct rte_udp_hdr *udp = onvm_pkt_udp_hdr(pkt);
-                if (udp) {
-                        meta->rewrite_data.inet_sport = rte_be_to_cpu_16(udp->src_port);
-                        meta->rewrite_data.inet_dport = rte_be_to_cpu_16(udp->dst_port);
-                }
+        meta->rewrite_data.proto = parse_ctx->inet_proto;
+        switch (parse_ctx->inet_proto) {
+                case IP_PROTOCOL_TCP:
+                        meta->rewrite_data.inet_sport = rte_be_to_cpu_16(parse_ctx->tcp_hdr->src_port);
+                        meta->rewrite_data.inet_dport = rte_be_to_cpu_16(parse_ctx->tcp_hdr->dst_port);
+                        break;
+                case IP_PROTOCOL_UDP:
+                        meta->rewrite_data.inet_sport = rte_be_to_cpu_16(parse_ctx->udp_hdr->src_port);
+                        meta->rewrite_data.inet_dport = rte_be_to_cpu_16(parse_ctx->udp_hdr->dst_port);
+                        break;
         }
 
         meta->rewrite_data.out_port = out_port;
