@@ -76,6 +76,20 @@ struct onvm_ft_ipv4_5tuple {
         uint8_t proto;
 };
 
+struct onvm_ft_inet_5tuple {
+        union {
+                uint32_t inet4_saddr;
+                uint8_t  inet6_saddr[INET6_ADDR_LEN];
+        };
+        union {
+                uint32_t inet4_daddr;
+                uint8_t  inet6_daddr[INET6_ADDR_LEN];
+        };
+        uint16_t inet_sport;
+        uint16_t inet_dport;
+        uint8_t proto;
+};
+
 /* from l2_forward example, but modified to include port. This should
  * be automatically included in the hash functions since it hashes
  * the struct in 4byte chunks. */
@@ -99,7 +113,13 @@ int
 onvm_ft_add_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data);
 
 int
+onvm_ft_add_pkt_parse_ctx(struct onvm_ft *table, struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
+
+int
 onvm_ft_lookup_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data);
+
+int
+onvm_ft_lookup_pkt_parse_ctx(struct onvm_ft *table, struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
 
 int32_t
 onvm_ft_remove_pkt(struct onvm_ft *table, struct rte_mbuf *pkt);
@@ -164,6 +184,34 @@ onvm_ft_fill_key(struct onvm_ft_ipv4_5tuple *key, struct rte_mbuf *pkt) {
                 key->src_port = 0;
                 key->dst_port = 0;
         }
+        return 0;
+}
+
+static inline int
+onvm_ft_fill_key_parse_ctx(struct onvm_ft_inet_5tuple *key, struct onvm_pkt_parse_ctx *parse_ctx) {
+        memset(key, 0, sizeof(*key));
+        switch (parse_ctx->ether_type) {
+                case RTE_ETHER_TYPE_IPV4:
+                        key->inet4_saddr = parse_ctx->inet4_hdr->src_addr;
+                        key->inet4_daddr = parse_ctx->inet4_hdr->dst_addr;
+                        break;
+                case RTE_ETHER_TYPE_IPV6:
+                        onvm_pkt_ipv6_addr_copy(parse_ctx->inet6_hdr->src_addr, key->inet6_saddr);
+                        onvm_pkt_ipv6_addr_copy(parse_ctx->inet6_hdr->dst_addr, key->inet6_daddr);
+                        break;
+        }
+        key->proto = parse_ctx->inet_proto;
+        switch (parse_ctx->inet_proto) {
+                case IP_PROTOCOL_TCP:
+                        key->inet_sport = parse_ctx->tcp_hdr->src_port;
+                        key->inet_dport = parse_ctx->tcp_hdr->dst_port;
+                        break;
+                case IP_PROTOCOL_UDP:
+                        key->inet_sport = parse_ctx->udp_hdr->src_port;
+                        key->inet_dport = parse_ctx->udp_hdr->dst_port;
+                        break;
+        }
+
         return 0;
 }
 

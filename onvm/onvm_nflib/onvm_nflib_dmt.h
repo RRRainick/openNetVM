@@ -25,7 +25,7 @@ struct onvm_dmt_nf_info {
         rewrite_t rewrite_field;
 };
 
-int onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, struct onvm_ft *mpw_table, bool hit);
+int onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_pkt_meta *meta, struct onvm_ft *mpw_table, bool hit);
 
 struct onvm_dmt_nf_info *
 onvm_nflib_dmt_get_nf_info(struct onvm_nf_local_ctx *nf_local_ctx);
