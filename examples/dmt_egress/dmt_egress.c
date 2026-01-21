@@ -200,7 +200,7 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
 
                 if (!cache_req) return 0;
 
-                onvm_nflib_dmt_format_cache_req(pkt, meta, cache_req);
+                onvm_nflib_dmt_format_cache_req(pkt, meta, cache_req, CACHE_REQ_ACTION_INSERT, CACHE_REQ_STATE_STATELESS);
                 onvm_nflib_request_cache(cache_req);
                 rte_free(cache_req);
         }
