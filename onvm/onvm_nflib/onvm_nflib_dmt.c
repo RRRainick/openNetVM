@@ -242,7 +242,7 @@ onvm_nflib_dmt_do_cache(struct onvm_pkt_meta *meta, const mpw_t mpw_threshold) {
 }
 
 void
-onvm_nflib_dmt_format_cache_req(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, struct cache_request *cache_req) {
+onvm_nflib_dmt_format_cache_req(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, struct cache_request *cache_req, action_t action, state_t state) {
         struct rte_ether_hdr *eth = onvm_pkt_ether_hdr(pkt);
         struct cache_data *data = &cache_req->cache_data;
         rewrite_t i;
@@ -260,4 +260,6 @@ onvm_nflib_dmt_format_cache_req(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta
         data->rewrite_data = meta->rewrite_data;
 
         data->type = rte_be_to_cpu_16(eth->ether_type);
+        data->action = action;
+        data->state = state;
 }

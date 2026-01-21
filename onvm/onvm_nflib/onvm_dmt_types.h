@@ -26,7 +26,8 @@ typedef uint8_t rewrite_t;
 #define BITMAP_L4_DPORT (0x01 << 6)
 
 typedef uint8_t port_t;
-
+typedef uint8_t action_t;
+typedef uint8_t state_t;
 /* cache_req action */
 #define CACHE_REQ_ACTION_INSERT 1
 #define CACHE_REQ_ACTION_REMOVE 2
@@ -69,8 +70,8 @@ struct dmt_rewrite_data {
 
 /* cache_req data */
 struct cache_data {
-        uint8_t action;
-        uint8_t state;
+        action_t action;
+        state_t state;
         match_t match_field;
         rewrite_t rewrite_field;
         struct dmt_match_data match_data;
