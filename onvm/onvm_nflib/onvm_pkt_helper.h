@@ -59,6 +59,7 @@ struct onvm_pkt_parse_ctx {
         union {
                 struct rte_ipv4_hdr *inet4_hdr;
                 struct rte_ipv6_hdr *inet6_hdr;
+                struct dmt_icn_header *icn_hdr;
         };
         /* L4 header */
         union {
@@ -73,6 +74,7 @@ struct onvm_pkt_parse_ctx {
 
 #define IP_PROTOCOL_TCP 6
 #define IP_PROTOCOL_UDP 17
+#define IP_PROTOCOL_INVALID 255
 
 #define SUPPORTS_IPV4_CHECKSUM_OFFLOAD (1 << 0)
 #define SUPPORTS_TCP_CHECKSUM_OFFLOAD (1 << 1)

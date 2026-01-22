@@ -40,8 +40,10 @@
 
 #include "onvm_pkt_helper.h"
 #include "onvm_common.h"
+#include "onvm_dmt_pkt_types.h"
 #include "onvm_pkt_common.h"
 #include "rte_byteorder.h"
+#include "rte_mbuf_core.h"
 
 #include <inttypes.h>
 
@@ -792,6 +794,11 @@ onvm_pkt_parse(struct rte_mbuf* pkt, struct onvm_pkt_parse_ctx* ctx) {
                         len += sizeof(*ctx->inet6_hdr);
                         ctx->inet_proto = ctx->inet6_hdr->proto;
                         break;
+                case DMT_ETHER_TYPE_ICN:
+                        ctx->icn_hdr = rte_pktmbuf_mtod_offset(pkt, struct dmt_icn_header*, len);
+                        len += sizeof(*ctx->icn_hdr);
+                        ctx->inet_proto = IP_PROTOCOL_INVALID;
+                        break;
                 default:
                         goto err;
         }
@@ -805,6 +812,9 @@ onvm_pkt_parse(struct rte_mbuf* pkt, struct onvm_pkt_parse_ctx* ctx) {
                 case IP_PROTOCOL_UDP:
                         ctx->udp_hdr = rte_pktmbuf_mtod_offset(pkt, struct rte_udp_hdr*, len);
                         len += sizeof(*ctx->udp_hdr);
+                        break;
+                case IP_PROTOCOL_INVALID:
+                        ctx->udp_hdr = NULL;
                         break;
                 default:
                         goto err;

@@ -49,6 +49,7 @@
 #include <rte_udp.h>
 #include <string.h>
 #include "onvm_common.h"
+#include "onvm_dmt_pkt_types.h"
 #include "onvm_pkt_helper.h"
 
 extern uint8_t rss_symmetric_key[40];
@@ -80,10 +81,12 @@ struct onvm_ft_inet_5tuple {
         union {
                 uint32_t inet4_saddr;
                 uint8_t  inet6_saddr[INET6_ADDR_LEN];
+                icn_addr_t icn_saddr;
         };
         union {
                 uint32_t inet4_daddr;
                 uint8_t  inet6_daddr[INET6_ADDR_LEN];
+                icn_addr_t icn_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;
@@ -199,6 +202,10 @@ onvm_ft_fill_key_parse_ctx(struct onvm_ft_inet_5tuple *key, struct onvm_pkt_pars
                         onvm_pkt_ipv6_addr_copy(parse_ctx->inet6_hdr->src_addr, key->inet6_saddr);
                         onvm_pkt_ipv6_addr_copy(parse_ctx->inet6_hdr->dst_addr, key->inet6_daddr);
                         break;
+                case DMT_ETHER_TYPE_ICN:
+                        key->icn_saddr = parse_ctx->icn_hdr->src_addr;
+                        key->icn_daddr = parse_ctx->icn_hdr->dst_addr;
+                        break;
         }
         key->proto = parse_ctx->inet_proto;
         switch (parse_ctx->inet_proto) {
@@ -209,6 +216,10 @@ onvm_ft_fill_key_parse_ctx(struct onvm_ft_inet_5tuple *key, struct onvm_pkt_pars
                 case IP_PROTOCOL_UDP:
                         key->inet_sport = parse_ctx->udp_hdr->src_port;
                         key->inet_dport = parse_ctx->udp_hdr->dst_port;
+                        break;
+                case IP_PROTOCOL_INVALID:
+                        key->inet_sport = 0;
+                        key->inet_dport = 0;
                         break;
         }
 

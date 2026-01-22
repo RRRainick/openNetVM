@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <rte_mbuf.h>
+#include "onvm_dmt_pkt_types.h"
 #include "onvm_dmt_types.h"
 #include "onvm_flow_table.h"
 #include "onvm_nflib.h"
