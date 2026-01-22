@@ -7,7 +7,8 @@
 #include <inttypes.h>
 #include <errno.h>
 
-#include "../../onvm/onvm_nflib/onvm_dmt_types.h"
+#include "onvm_dmt_types.h"
+#include "onvm_dmt_pkt_types.h"
 
 #define PORT 1234
 
@@ -26,6 +27,10 @@ static void print_ipv4(uint32_t ip) {
     printf("%u.%u.%u.%u", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
 }
 
+static void print_icn_addr(icn_addr_t addr) {
+    printf("%hhu", addr);
+}
+
 static void print_ipv6(const uint8_t *ip) {
     char buf[INET6_ADDRSTRLEN];
     if (inet_ntop(AF_INET6, ip, buf, sizeof(buf))) {
@@ -42,7 +47,8 @@ static void print_cache_data(struct cache_data *data) {
     printf("State: %u\n", data->state);
     printf("Type: 0x%04X (%s)\n", data->type,
            data->type == CACHE_REQ_TYPE_IPV4 ? "IPv4" : 
-           (data->type == CACHE_REQ_TYPE_IPV6 ? "IPv6" : "Unknown"));
+           (data->type == CACHE_REQ_TYPE_IPV6 ? "IPv6" : 
+           (data->type == CACHE_REQ_TYPE_ICN ? "ICN" : "Unknown")));
     printf("Match Field Bitmap: 0x%02X\n", data->match_field);
     printf("Rewrite Field Bitmap: 0x%02X\n", data->rewrite_field);
 
@@ -50,6 +56,9 @@ static void print_cache_data(struct cache_data *data) {
     if (data->type == CACHE_REQ_TYPE_IPV6) {
         printf("  Src IP: "); print_ipv6(data->match_data.inet6_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv6(data->match_data.inet6_daddr); printf("\n");
+    } else if (data->type == CACHE_REQ_TYPE_ICN) {
+        printf("  Src ICN: "); print_icn_addr(data->match_data.icn_saddr); printf("\n");
+        printf("  Dst ICN: "); print_icn_addr(data->match_data.icn_daddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->match_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->match_data.inet4_daddr); printf("\n");
@@ -61,6 +70,9 @@ static void print_cache_data(struct cache_data *data) {
     if (data->type == CACHE_REQ_TYPE_IPV6) {
         printf("  Src IP: "); print_ipv6(data->rewrite_data.inet6_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv6(data->rewrite_data.inet6_daddr); printf("\n");
+    } else if (data->type == CACHE_REQ_TYPE_ICN) {
+        printf("  Src ICN: "); print_icn_addr(data->rewrite_data.icn_saddr); printf("\n");
+        printf("  Dst ICN: "); print_icn_addr(data->rewrite_data.icn_daddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->rewrite_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->rewrite_data.inet4_daddr); printf("\n");
