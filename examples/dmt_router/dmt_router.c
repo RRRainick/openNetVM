@@ -49,6 +49,7 @@
 #include <sys/queue.h>
 #include <unistd.h>
 
+#include <rte_malloc.h>
 #include <rte_common.h>
 #include <rte_ip.h>
 #include <rte_mbuf.h>
@@ -173,17 +174,20 @@ static int
 packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, __attribute__((unused))struct onvm_nf_local_ctx *nf_local_ctx) {
         static uint32_t counter = 0;
         struct onvm_dmt_nf_info *info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
+        struct onvm_pkt_parse_ctx *parse_ctx = (struct onvm_pkt_parse_ctx *) rte_malloc(NULL, sizeof(struct onvm_pkt_parse_ctx), 0);
 
         if (counter++ == print_delay) {
                 do_stats_display(pkt);
                 counter = 0;
         }
 
-        onvm_nflib_dmt_synthesize_bitmap(info, meta);
-
-        if (onvm_pkt_tcp_hdr(pkt)) {
-                onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
+        if (onvm_pkt_parse(pkt, parse_ctx)) {
+                meta->action = ONVM_NF_ACTION_DROP;
+                goto end;
         }
+
+        onvm_nflib_dmt_synthesize_bitmap(info, meta);
+        onvm_nflib_dmt_update_mpw_table(pkt, parse_ctx, meta, info->mpw_table, true);
 
         // NOTE: ROUTER: rewrite eth_saddr to 2, eth_daddr to 1
         struct rte_ether_hdr *eth = onvm_pkt_ether_hdr(pkt);
@@ -197,6 +201,9 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, __attribute__((
 
         meta->action = dest_action;
         meta->destination = destination;
+
+end:
+        rte_free(parse_ctx);
         return 0;
 }
 

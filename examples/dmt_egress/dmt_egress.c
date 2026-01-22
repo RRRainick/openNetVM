@@ -183,17 +183,21 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
                __attribute__((unused)) struct onvm_nf_local_ctx *nf_local_ctx) {
         static uint32_t counter = 0;
         struct onvm_dmt_nf_info *info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
+        struct onvm_pkt_parse_ctx *parse_ctx = (struct onvm_pkt_parse_ctx *) rte_malloc(NULL, sizeof(struct onvm_pkt_parse_ctx), 0);
 
         if (counter++ == print_delay) {
                 do_stats_display(pkt);
                 counter = 0;
         }
 
-        onvm_nflib_dmt_synthesize_bitmap(info, meta);
-        onvm_nflib_dmt_record_rewrite_data(pkt, meta, out_port);
-        if (onvm_pkt_tcp_hdr(pkt)) {
-                onvm_nflib_dmt_update_mpw_table(pkt, meta, info->mpw_table, true);
+        if (onvm_pkt_parse(pkt, parse_ctx)) {
+                meta->action = ONVM_NF_ACTION_DROP;
+                goto end;
         }
+
+        onvm_nflib_dmt_synthesize_bitmap(info, meta);
+        onvm_nflib_dmt_record_rewrite_data(parse_ctx, meta, out_port);
+        onvm_nflib_dmt_update_mpw_table(pkt, parse_ctx, meta, info->mpw_table, true);
 
         if (onvm_nflib_dmt_do_cache(meta, CACHE_REQ_THRESHOLD)) {
                 cache_req = (struct cache_request *) rte_malloc(NULL, sizeof(struct cache_request), 0);
@@ -208,6 +212,8 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
         meta->action = dest_action;
         meta->destination = destination;
 
+end:
+        rte_free(parse_ctx);
         return 0;
 }
 
