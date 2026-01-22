@@ -11,44 +11,62 @@
 
 #define PORT 1234
 
-
-void print_mac(const struct rte_ether_addr *addr);
-void print_ip(uint32_t ip);
-void print_cache_data(struct cache_data *data);
-
-void print_mac(const struct rte_ether_addr *addr) {
+static void print_mac(const struct rte_ether_addr *addr) {
     printf("%02X:%02X:%02X:%02X:%02X:%02X",
            addr->addr_bytes[0], addr->addr_bytes[1],
            addr->addr_bytes[2], addr->addr_bytes[3],
            addr->addr_bytes[4], addr->addr_bytes[5]);
 }
 
-void print_ip(uint32_t ip) {
-    struct in_addr addr;
-    addr.s_addr = ip;
-    printf("%s", inet_ntoa(addr));
+static void print_ipv4(uint32_t ip) {
+    /* convert byte order */
+    // struct in_addr addr;
+    // addr.s_addr = ip;
+    // printf("%s", inet_ntoa(addr));
+    printf("%u.%u.%u.%u", (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
 }
 
-void print_cache_data(struct cache_data *data) {
+static void print_ipv6(const uint8_t *ip) {
+    char buf[INET6_ADDRSTRLEN];
+    if (inet_ntop(AF_INET6, ip, buf, sizeof(buf))) {
+        printf("%s", buf);
+    } else {
+        printf("Invalid IPv6");
+    }
+}
+
+static void print_cache_data(struct cache_data *data) {
     printf("--------------------------------------------------\n");
     printf("Received Cache Data:\n");
     printf("Action: %u\n", data->action);
     printf("State: %u\n", data->state);
-    printf("Type: 0x%02X\n", ntohs(data->type));
+    printf("Type: 0x%04X (%s)\n", data->type,
+           data->type == CACHE_REQ_TYPE_IPV4 ? "IPv4" : 
+           (data->type == CACHE_REQ_TYPE_IPV6 ? "IPv6" : "Unknown"));
     printf("Match Field Bitmap: 0x%02X\n", data->match_field);
     printf("Rewrite Field Bitmap: 0x%02X\n", data->rewrite_field);
 
     printf("\nMatch Data:\n");
-    printf("  Src IP: "); print_ip(data->match_data.inet4_saddr); printf("\n");
-    printf("  Dst IP: "); print_ip(data->match_data.inet4_daddr); printf("\n");
-    printf("  Src Port: %u\n", ntohs(data->match_data.inet_sport));
-    printf("  Dst Port: %u\n", ntohs(data->match_data.inet_dport));
+    if (data->type == CACHE_REQ_TYPE_IPV6) {
+        printf("  Src IP: "); print_ipv6(data->match_data.inet6_saddr); printf("\n");
+        printf("  Dst IP: "); print_ipv6(data->match_data.inet6_daddr); printf("\n");
+    } else {
+        printf("  Src IP: "); print_ipv4(data->match_data.inet4_saddr); printf("\n");
+        printf("  Dst IP: "); print_ipv4(data->match_data.inet4_daddr); printf("\n");
+    }
+    printf("  Src Port: %u\n", data->match_data.inet_sport);
+    printf("  Dst Port: %u\n", data->match_data.inet_dport);
 
     printf("\nRewrite Data:\n");
-    printf("  Src IP: "); print_ip(data->rewrite_data.inet4_saddr); printf("\n");
-    printf("  Dst IP: "); print_ip(data->rewrite_data.inet4_daddr); printf("\n");
-    printf("  Src Port: %u\n", ntohs(data->rewrite_data.inet_sport));
-    printf("  Dst Port: %u\n", ntohs(data->rewrite_data.inet_dport));
+    if (data->type == CACHE_REQ_TYPE_IPV6) {
+        printf("  Src IP: "); print_ipv6(data->rewrite_data.inet6_saddr); printf("\n");
+        printf("  Dst IP: "); print_ipv6(data->rewrite_data.inet6_daddr); printf("\n");
+    } else {
+        printf("  Src IP: "); print_ipv4(data->rewrite_data.inet4_saddr); printf("\n");
+        printf("  Dst IP: "); print_ipv4(data->rewrite_data.inet4_daddr); printf("\n");
+    }
+    printf("  Src Port: %u\n", data->rewrite_data.inet_sport);
+    printf("  Dst Port: %u\n", data->rewrite_data.inet_dport);
     printf("  Proto: %u\n", data->rewrite_data.proto);
     printf("  Out Port: %u\n", data->rewrite_data.out_port);
     printf("  Dec TTL: %u\n", data->rewrite_data.dec_ttl);
