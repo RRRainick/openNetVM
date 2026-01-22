@@ -186,7 +186,7 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
 
         if (onvm_pkt_parse(pkt, parse_ctx)) {
                 meta->action = ONVM_NF_ACTION_DROP;
-                RTE_LOG(INFO, APP, "rss: %u: Unkown packet, drop\n", pkt->hash.rss);
+                RTE_LOG(INFO, APP, "rss: %u: Unkown packet type(%hu), drop\n", pkt->hash.rss, parse_ctx->ether_type);
                 goto end;
         }
 
