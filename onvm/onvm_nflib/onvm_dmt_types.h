@@ -43,6 +43,7 @@ typedef uint16_t type_t;
 #define CACHE_REQ_TYPE_IPV4 RTE_ETHER_TYPE_IPV4
 #define CACHE_REQ_TYPE_IPV6 RTE_ETHER_TYPE_IPV6
 #define CACHE_REQ_TYPE_ICN DMT_ETHER_TYPE_ICN
+#define CACHE_REQ_TYPE_IPN DMT_ETHER_TYPE_IPN
 
 
 struct dmt_match_data {
@@ -50,11 +51,13 @@ struct dmt_match_data {
                 uint32_t inet4_saddr;
                 uint8_t  inet6_saddr[INET6_ADDR_LEN];
                 icn_addr_t icn_saddr;
+                ipn_addr_t ipn_saddr;
         };
         union {
                 uint32_t inet4_daddr;
                 uint8_t  inet6_daddr[INET6_ADDR_LEN];
                 icn_addr_t icn_daddr;
+                ipn_addr_t ipn_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;
@@ -65,11 +68,13 @@ struct dmt_rewrite_data {
                 uint32_t inet4_saddr;
                 uint8_t  inet6_saddr[INET6_ADDR_LEN];
                 icn_addr_t icn_saddr;
+                ipn_addr_t ipn_saddr;
         };
         union {
                 uint32_t inet4_daddr;
                 uint8_t  inet6_daddr[INET6_ADDR_LEN];
                 icn_addr_t icn_daddr;
+                ipn_addr_t ipn_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;
