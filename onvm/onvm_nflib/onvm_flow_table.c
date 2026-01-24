@@ -109,6 +109,62 @@ onvm_ft_create(int cnt, int entry_size) {
         return ft;
 }
 
+/* Create a new flow table made of an rte_hash table and a fixed size
+ * data array for storing values. Supports dmt tuple lookups. */
+struct onvm_ft *
+onvm_dmt_ft_create(int cnt, int entry_size) {
+        struct rte_hash *hash;
+        struct rte_hash_parameters *ipv4_hash_params;
+        struct onvm_ft *ft;
+        int status;
+
+        ipv4_hash_params = (struct rte_hash_parameters *) rte_zmalloc(NULL, sizeof(struct rte_hash_parameters), 0);
+        if (!ipv4_hash_params) {
+                return NULL;
+        }
+
+        char *name = rte_malloc(NULL, 64, 0);
+        /* create ipv4 hash table. use core number and cycle counter to get a unique name. */
+        ipv4_hash_params->entries = cnt;
+        ipv4_hash_params->key_len = sizeof(struct onvm_ft_dmt_tuple);
+        ipv4_hash_params->hash_func = NULL;
+        ipv4_hash_params->hash_func_init_val = 0;
+        ipv4_hash_params->name = name;
+        ipv4_hash_params->socket_id = rte_socket_id();
+        snprintf(name, 64, "onvm_ft_%d-%" PRIu64, rte_lcore_id(), rte_get_tsc_cycles());
+
+        if (rte_eal_process_type() == RTE_PROC_PRIMARY) {
+                hash = rte_hash_create(ipv4_hash_params);
+        } else {
+                status = onvm_nflib_request_ft(ipv4_hash_params);
+                if (status < 0) {
+                        return NULL;
+                }
+                hash = rte_hash_find_existing(name);
+        }
+
+        rte_free(name);
+        if (!hash) {
+                return NULL;
+        }
+        ft = (struct onvm_ft *) rte_calloc("table", 1, sizeof(struct onvm_ft), 0);
+        if (!ft) {
+                rte_hash_free(hash);
+                return NULL;
+        }
+        ft->hash = hash;
+        ft->cnt = cnt;
+        ft->entry_size = entry_size;
+        /* Create data array for storing values */
+        ft->data = rte_calloc("entry", cnt, entry_size, 0);
+        if (!ft->data) {
+                rte_hash_free(hash);
+                rte_free(ft);
+                return NULL;
+        }
+        return ft;
+}
+
 /* Add an entry in flow table and set data to point to the new value.
 Returns:
  index in the array on success
@@ -141,28 +197,22 @@ Returns:
  -ENOSPC if there is no space in the hash for this key.
 */
 int
-onvm_ft_add_pkt_parse_ctx(struct onvm_ft *table, struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
+onvm_ft_add_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
         int32_t tbl_index;
-        struct onvm_ft_inet_5tuple key;
+        struct onvm_ft_dmt_tuple key;
         int err;
 
-        err = onvm_ft_fill_key_parse_ctx(&key, parse_ctx);
+        err = onvm_ft_fill_dmt_key_parse_ctx(&key, parse_ctx);
         if (err < 0) {
                 return err;
         }
-        tbl_index = rte_hash_add_key_with_hash(table->hash, (const void *)&key, pkt->hash.rss);
+        tbl_index = rte_hash_add_key_with_hash(table->hash, (const void *)&key, DEFAULT_HASH_FUNC(&key, sizeof(key), 0));
         if (tbl_index >= 0) {
                 *data = &table->data[tbl_index * table->entry_size];
         }
         return tbl_index;
 }
 
-/* Lookup an entry in flow table and set data to point to the value.
-   Returns:
-    index in the array on success
-    -ENOENT if the key is not found.
-    -EINVAL if the parameters are invalid.
-*/
 int
 onvm_ft_lookup_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data) {
         int32_t tbl_index;
@@ -180,23 +230,17 @@ onvm_ft_lookup_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data) {
         return tbl_index;
 }
 
-/* Lookup an entry in flow table and set data to point to the value.
-   Returns:
-    index in the array on success
-    -ENOENT if the key is not found.
-    -EINVAL if the parameters are invalid.
-*/
 int
-onvm_ft_lookup_pkt_parse_ctx(struct onvm_ft *table, struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
+onvm_ft_lookup_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
         int32_t tbl_index;
-        struct onvm_ft_inet_5tuple key;
+        struct onvm_ft_dmt_tuple key;
         int ret;
 
-        ret = onvm_ft_fill_key_parse_ctx(&key, parse_ctx);
+        ret = onvm_ft_fill_dmt_key_parse_ctx(&key, parse_ctx);
         if (ret < 0) {
                 return ret;
         }
-        tbl_index = rte_hash_lookup_with_hash(table->hash, (const void *)&key, pkt->hash.rss);
+        tbl_index = rte_hash_lookup_with_hash(table->hash, (const void *)&key, DEFAULT_HASH_FUNC(&key, sizeof(key), 0));
         if (tbl_index >= 0) {
                 *data = onvm_ft_get_data(table, tbl_index);
         }

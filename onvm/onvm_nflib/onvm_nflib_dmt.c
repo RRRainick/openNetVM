@@ -19,11 +19,11 @@ match_t dmt_nf_match_field __attribute__((weak)) = 0x0;
 rewrite_t dmt_nf_rewrite_field __attribute__((weak)) = 0x0;
 
 static int
-onvm_nflib_dmt_add_mpw_entry(struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_ft *mpw_table) {
+onvm_nflib_dmt_add_mpw_entry(struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_ft *mpw_table) {
         int idx;
         struct onvm_dmt_mpw_data *data = NULL;
 
-        idx = onvm_ft_add_pkt_parse_ctx(mpw_table, pkt, parse_ctx, (char **)&data);
+        idx = onvm_ft_add_key_parse_ctx(mpw_table, parse_ctx, (char **)&data);
 
         switch (idx) {
                 case -EPROTONOSUPPORT:
@@ -33,7 +33,7 @@ onvm_nflib_dmt_add_mpw_entry(struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *pa
                         RTE_LOG(INFO, APP, "Bad argument\n");
                         break;
                 case -ENOSPC:
-                        RTE_LOG(INFO, APP, "Not enough space");
+                        RTE_LOG(INFO, APP, "Not enough space\n");
                         break;
                 default:
                         data->mpw = 0;
@@ -62,7 +62,7 @@ onvm_nflib_dmt_init_nf_info(struct onvm_nf_local_ctx *nf_local_ctx) {
 
 
 int
-onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_pkt_meta *meta, struct onvm_ft *mpw_table, bool hit) {
+onvm_nflib_dmt_update_mpw_table(struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_pkt_meta *meta, struct onvm_ft *mpw_table, bool hit) {
         int idx;
         struct onvm_dmt_mpw_data *data = NULL;
         win_idx_t delta = 0;
@@ -70,11 +70,11 @@ onvm_nflib_dmt_update_mpw_table(struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx 
         if (!hit)
                 return 0;
 
-        idx = onvm_ft_lookup_pkt_parse_ctx(mpw_table, pkt, parse_ctx, (char **)&data);
+        idx = onvm_ft_lookup_key_parse_ctx(mpw_table, parse_ctx, (char **)&data);
 
         switch (idx) {
                 case -ENOENT:
-                        onvm_nflib_dmt_add_mpw_entry(pkt, parse_ctx, mpw_table);
+                        onvm_nflib_dmt_add_mpw_entry(parse_ctx, mpw_table);
                         break;
                 case -EINVAL:
                         RTE_LOG(INFO, APP, "Bad argument\n");
@@ -122,7 +122,7 @@ onvm_nflib_dmt_nf_setup(struct onvm_nf_local_ctx *nf_local_ctx) {
         }
 
         info = onvm_nflib_dmt_get_nf_info(nf_local_ctx);
-        info->mpw_table = onvm_ft_create(ONVM_NFLIB_DMT_MPW_ENTRIES, sizeof(struct onvm_dmt_mpw_data));
+        info->mpw_table = onvm_dmt_ft_create(ONVM_NFLIB_DMT_MPW_ENTRIES, sizeof(struct onvm_dmt_mpw_data));
         if (info->mpw_table == NULL) {
                 rte_exit(EXIT_FAILURE, "Unable to create mpw table\n");
         }

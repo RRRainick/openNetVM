@@ -77,7 +77,7 @@ struct onvm_ft_ipv4_5tuple {
         uint8_t proto;
 };
 
-struct onvm_ft_inet_5tuple {
+struct onvm_ft_dmt_tuple {
         union {
                 uint32_t inet4_saddr;
                 uint8_t  inet6_saddr[INET6_ADDR_LEN];
@@ -114,17 +114,20 @@ union ipv4_5tuple_host {
 struct onvm_ft *
 onvm_ft_create(int cnt, int entry_size);
 
+struct onvm_ft *
+onvm_dmt_ft_create(int cnt, int entry_size);
+
 int
 onvm_ft_add_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data);
 
 int
-onvm_ft_add_pkt_parse_ctx(struct onvm_ft *table, struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
+onvm_ft_add_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
 
 int
 onvm_ft_lookup_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data);
 
 int
-onvm_ft_lookup_pkt_parse_ctx(struct onvm_ft *table, struct rte_mbuf *pkt, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
+onvm_ft_lookup_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
 
 int32_t
 onvm_ft_remove_pkt(struct onvm_ft *table, struct rte_mbuf *pkt);
@@ -193,7 +196,7 @@ onvm_ft_fill_key(struct onvm_ft_ipv4_5tuple *key, struct rte_mbuf *pkt) {
 }
 
 static inline int
-onvm_ft_fill_key_parse_ctx(struct onvm_ft_inet_5tuple *key, struct onvm_pkt_parse_ctx *parse_ctx) {
+onvm_ft_fill_dmt_key_parse_ctx(struct onvm_ft_dmt_tuple *key, struct onvm_pkt_parse_ctx *parse_ctx) {
         memset(key, 0, sizeof(*key));
         switch (parse_ctx->ether_type) {
                 case RTE_ETHER_TYPE_IPV4:

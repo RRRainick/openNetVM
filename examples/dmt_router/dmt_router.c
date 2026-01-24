@@ -187,7 +187,7 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, __attribute__((
         }
 
         onvm_nflib_dmt_synthesize_bitmap(info, meta);
-        onvm_nflib_dmt_update_mpw_table(pkt, parse_ctx, meta, info->mpw_table, true);
+        onvm_nflib_dmt_update_mpw_table(parse_ctx, meta, info->mpw_table, true);
 
         /*
          * NF Function
