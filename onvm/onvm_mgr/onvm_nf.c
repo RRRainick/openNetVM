@@ -265,6 +265,7 @@ onvm_nf_check_cache_req(int sockfd) {
                 if (send(sockfd, data_cache, sizeof(struct cache_data), MSG_NOSIGNAL) < 0)
                         RTE_LOG(INFO, APP, "Can't send message\n");
 
+                rte_free(req_cache);
                 rte_mempool_put(nf_msg_pool, (void *)msg);
         }
 }

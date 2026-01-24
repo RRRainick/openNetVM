@@ -282,12 +282,8 @@ onvm_nflib_request_cache(struct cache_request *cache_req)
         }
 
         cache_req->status = NF_WAITING_FOR_CACHE;
-        for (; cache_req->status == (uint16_t) NF_WAITING_FOR_CACHE;) {
-                sleep(1);
-        }
 
-        rte_mempool_put(nf_msg_pool, request_message);
-        return cache_req->status;
+        return 0;
 }
 
 int

@@ -207,12 +207,13 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
          */
 
         if (onvm_nflib_dmt_do_cache(meta, CACHE_REQ_THRESHOLD)) {
-                cache_req = (struct cache_request *) rte_malloc(NULL, sizeof(struct cache_request), 0);
+                cache_req = (struct cache_request *)rte_malloc(NULL, sizeof(struct cache_request),
+                                                               0); /* freed by NF Manager in onvm_nf_check_cache_req */
 
                 if (!cache_req) return 0;
 
                 onvm_nflib_dmt_format_cache_req(pkt, meta, cache_req, CACHE_REQ_ACTION_INSERT, CACHE_REQ_STATE_STATELESS);
-                // NOTE: NF function: tag hardware cache eth_saddr to 2
+                // NOTE: NF function: tag hardware cache eth_saddr to 3
                 cache_req->cache_data.rewrite_data.eth_saddr.addr_bytes[5] = 0x03;
 
                 do {
@@ -222,7 +223,6 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
                 } while (0);
 
                 onvm_nflib_request_cache(cache_req);
-                rte_free(cache_req);
         }
 
         meta->action = dest_action;
