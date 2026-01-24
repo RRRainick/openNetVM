@@ -56,19 +56,19 @@ class AppWrapper extends React.PureComponent<Props, State> {
     const navProps = {
       itemsObjects: [
         {
-          value: "NF Dashboard",
+          value: "网络模态仪表盘",
           to: "/nfs",
           icon: "home",
           LinkComponent: withRouter(NavLink)
         },
         {
-          value: "Port Dashboard",
+          value: "网络模态共生平台（软件路径）网口",
           to: "/ports",
           icon: "server",
           LinkComponent: withRouter(NavLink)
         },
         {
-          value: "Core Mappings",
+          value: "网络模态共生平台 CPU 核心分配",
           to: "/core-mappings",
           icon: "cpu",
           LinkComponent: withRouter(NavLink)

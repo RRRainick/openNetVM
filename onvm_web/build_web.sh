@@ -40,6 +40,9 @@
 set -e
 
 # NOTE: This script assumes yarn and nodev8+ are installed
+# NOTE: NODE_OPTIONS is needed for Node.js 17+ compatibility with older webpack
+
+export NODE_OPTIONS=--openssl-legacy-provider
 
 cd react-app
 yarn

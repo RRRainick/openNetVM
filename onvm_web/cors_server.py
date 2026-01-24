@@ -1,14 +1,18 @@
-# Source: https://stackoverflow.com/questions/21956683/enable-access-control-on-simple-http-server
+#!/usr/bin/env python3
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+import http.server
 
-# PYTHON 2 ONLY
-
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-import BaseHTTPServer
 
 class CORSHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        SimpleHTTPRequestHandler.end_headers(self)
+        # 添加 CORS 头
+        self.send_header("Access-Control-Allow-Origin", "*")
+        # Python 3 中推荐使用 super() 来调用父类方法
+        super().end_headers()
 
-if __name__ == '__main__':
-    BaseHTTPServer.test(CORSHandler, BaseHTTPServer.HTTPServer)
+
+if __name__ == "__main__":
+    # http.server.test 是 Python 内置的简易启动函数
+    # 默认端口为 8000，也可以通过 port 参数指定
+    print("Serving HTTP on 0.0.0.0 port 8000 ...")
+    http.server.test(HandlerClass=CORSHandler, ServerClass=HTTPServer)

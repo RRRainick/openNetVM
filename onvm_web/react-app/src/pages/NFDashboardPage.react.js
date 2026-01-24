@@ -27,12 +27,10 @@ class NFDashboardPage extends React.PureComponent<Props, State> {
     console.log(event);
     if (event.message === "NF Ready") {
       nfLabel = ` - ${event.source.instance_id}`;
-      
-      if(event.source.type === "NF")
-        nfLabel = 'NF' + nfLabel;
-      else
-        nfLabel = event.source.type + nfLabel;
-      
+
+      if (event.source.type === "NF") nfLabel = "NF" + nfLabel;
+      else nfLabel = event.source.type + nfLabel;
+
       this.setState(prevState => {
         return { nfLabelList: [nfLabel, ...prevState.nfLabelList] };
       });
@@ -40,15 +38,15 @@ class NFDashboardPage extends React.PureComponent<Props, State> {
     if (event.message === "NF Stopping") {
       nfLabel = ` - ${event.source.instance_id}`;
 
-      if(event.source.type === "NF")
-        nfLabel = 'NF' + nfLabel;
-      else
-        nfLabel = event.source.type + nfLabel;
+      if (event.source.type === "NF") nfLabel = "NF" + nfLabel;
+      else nfLabel = event.source.type + nfLabel;
       console.log(nfLabel);
       this.setState(prevState => {
         console.log(prevState.nfLabelList);
         const arr = [
-          ...prevState.nfLabelList.filter(label => label.split(" - ")[1] !== nfLabel.split(" - ")[1])
+          ...prevState.nfLabelList.filter(
+            label => label.split(" - ")[1] !== nfLabel.split(" - ")[1]
+          )
         ];
         console.log("end: " + prevState.nfLabelList);
         return { nfLabelList: arr };
@@ -75,7 +73,7 @@ class NFDashboardPage extends React.PureComponent<Props, State> {
               <NFGraph nfLabel={label} history={history} />
             </Grid.Col>
           ))}
-          {nfLabelList.length === 0 && "No Running NFS to Display!"}
+          {nfLabelList.length === 0 && "当前没有网络模态正在运行"}
         </Grid.Row>
       </Page.Content>
     );

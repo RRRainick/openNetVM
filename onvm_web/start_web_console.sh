@@ -38,18 +38,19 @@
 #
 
 function usage {
-    echo "$0 [-p WEB-PORT-NUMBER]"
-    exit 1
+  echo "$0 [-p WEB-PORT-NUMBER]"
+  exit 1
 }
 
 web_port=8080
 
 while getopts "p:" opt; do
-    case $opt in
-        p) web_port="$OPTARG";;
-        \?) echo "Unknown option -$OPTARG" && usage
-            ;;
-    esac
+  case $opt in
+  p) web_port="$OPTARG" ;;
+  \?)
+    echo "Unknown option -$OPTARG" && usage
+    ;;
+  esac
 done
 
 # Start ONVM web stats console at http://localhost:<port num>
@@ -57,8 +58,7 @@ echo -n "Starting openNetVM Web Stats Console at http://localhost:"
 echo "$web_port"
 
 is_web_port_in_use=$(sudo netstat -tulpn | grep LISTEN | grep ":$web_port")
-if [[ "$is_web_port_in_use" != "" ]]
-then
+if [[ "$is_web_port_in_use" != "" ]]; then
   echo "[ERROR] Web port $web_port is in use"
   echo "$is_web_port_in_use"
   echo "[ERROR] Web stats failed to start"
@@ -66,8 +66,7 @@ then
 fi
 
 is_data_port_in_use=$(sudo netstat -tulpn | grep LISTEN | grep ":8000")
-if [[ "$is_data_port_in_use" != "" ]]
-then
+if [[ "$is_data_port_in_use" != "" ]]; then
   echo "[ERROR] Port 8000 is in use"
   echo "$is_data_port_in_use"
   echo "[ERROR] Web stats failed to start"
@@ -75,9 +74,9 @@ then
 fi
 
 cd "$ONVM_HOME"/onvm_web || usage
-nohup python cors_server.py 8000 &
+nohup python3 cors_server.py 8000 &
 export ONVM_WEB_PID=$!
 
 cd "$ONVM_HOME"/onvm_web/web-build || usage
-nohup python -m SimpleHTTPServer "$web_port" &
+nohup python3 -m http.server "$web_port" &
 export ONVM_WEB_PID2=$!

@@ -2,3 +2,5 @@ onvm_*stats.txt
 onvm_*stats.json
 onvm_*events.json
 config.json
+web-build/
+.venv/
