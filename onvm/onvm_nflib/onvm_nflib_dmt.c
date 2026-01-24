@@ -7,6 +7,8 @@
 #include <rte_mbuf.h>
 #include <rte_memcpy.h>
 #include <rte_log.h>
+#include <rte_hash.h>
+#include <rte_cycles.h>
 #include <errno.h>
 
 #include "onvm_nflib_dmt.h"
@@ -15,15 +17,60 @@
 #include "onvm_flow_table.h"
 #include "onvm_pkt_helper.h"
 
+#define EXPIRE_TIME 5
+
 match_t dmt_nf_match_field __attribute__((weak)) = 0x0;
 rewrite_t dmt_nf_rewrite_field __attribute__((weak)) = 0x0;
+
+static int
+update_status(uint64_t elapsed_cycles, struct onvm_dmt_mpw_data *data) {
+        if (unlikely(data == NULL)) {
+                return -1;
+        }
+        if ((elapsed_cycles - data->last_update_cycles) / rte_get_timer_hz() >= EXPIRE_TIME) {
+                data->is_active = 0;
+        } else {
+                data->is_active = 1;
+        }
+
+        return 0;
+}
+
+static int
+clear_entries(struct onvm_ft *table) {
+        struct onvm_dmt_mpw_data *data = NULL;
+        struct onvm_ft_dmt_tuple *key = NULL;
+        uint32_t next = 0;
+        int ret = 0;
+        uint64_t current_cycles = rte_get_tsc_cycles();
+
+        RTE_LOG(INFO, APP, "Clearing expired entries\n");
+
+        while (onvm_ft_iterate(table, (const void **)&key, (void **)&data, &next) > -1) {
+                if (update_status(current_cycles, data) < 0) {
+                        return -1;
+                }
+
+                if (!data->is_active) {
+                        ret = onvm_ft_remove_dmt_key(table, key);
+                        if (ret < 0) {
+                                RTE_LOG(INFO, APP, "Key should have been removed, but was not\n");
+                        }
+                }
+        }
+        return 0;
+}
 
 static int
 onvm_nflib_dmt_add_mpw_entry(struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_ft *mpw_table) {
         int idx;
         struct onvm_dmt_mpw_data *data = NULL;
 
-        idx = onvm_ft_add_key_parse_ctx(mpw_table, parse_ctx, (char **)&data);
+        idx = onvm_ft_add_dmt_key_parse_ctx(mpw_table, parse_ctx, (char **)&data);
+        RTE_LOG(INFO, APP, "rte_hash_count: %u, mpw_table->cnt: %u\n", rte_hash_count(mpw_table->hash), mpw_table->cnt);
+        if (rte_hash_count(mpw_table->hash) >= (mpw_table->cnt) / 2) {
+                clear_entries(mpw_table);
+        }
 
         switch (idx) {
                 case -EPROTONOSUPPORT:
@@ -38,6 +85,8 @@ onvm_nflib_dmt_add_mpw_entry(struct onvm_pkt_parse_ctx *parse_ctx, struct onvm_f
                 default:
                         data->mpw = 0;
                         data->win_idx = 0;
+                        data->is_active = 1;
+                        data->last_update_cycles = rte_get_tsc_cycles();
                         RTE_LOG(INFO, APP, "create entry\n");
                         break;
         }
@@ -70,7 +119,7 @@ onvm_nflib_dmt_update_mpw_table(struct onvm_pkt_parse_ctx *parse_ctx, struct onv
         if (!hit)
                 return 0;
 
-        idx = onvm_ft_lookup_key_parse_ctx(mpw_table, parse_ctx, (char **)&data);
+        idx = onvm_ft_lookup_dmt_key_parse_ctx(mpw_table, parse_ctx, (char **)&data);
 
         switch (idx) {
                 case -ENOENT:
@@ -83,12 +132,13 @@ onvm_nflib_dmt_update_mpw_table(struct onvm_pkt_parse_ctx *parse_ctx, struct onv
                         RTE_LOG(INFO, APP, "Unsupported protocol\n");
                         break;
                 default: /* match */
+                        data->last_update_cycles = rte_get_tsc_cycles();
                         delta = meta->win_idx - data->win_idx;
-                        RTE_LOG(INFO, APP, "meta->win_idx: %u, data->win_idx: %u\n", meta->win_idx, data->win_idx);
+                        // RTE_LOG(INFO, APP, "meta->win_idx: %u, data->win_idx: %u\n", meta->win_idx, data->win_idx);
                         if (delta > 0) {
                                 if (delta == 1) { /* update cycle reached */
                                         meta->min_mpw = RTE_MIN(meta->min_mpw, data->mpw);
-                                        RTE_LOG(INFO, APP, "min_mpw=%u\n", meta->min_mpw);
+                                        // RTE_LOG(INFO, APP, "min_mpw=%u\n", meta->min_mpw);
                                 }
                                 else { /* obsolete data info */
                                         meta->min_mpw = 1;
@@ -100,7 +150,7 @@ onvm_nflib_dmt_update_mpw_table(struct onvm_pkt_parse_ctx *parse_ctx, struct onv
                                 meta->min_mpw = 0; /* limit cache_req rate at 1 pps at most */
                                 data->mpw++;
                         }
-                        RTE_LOG(INFO, APP, "meta->min_mpw: %u \n", meta->min_mpw);
+                        // RTE_LOG(INFO, APP, "meta->min_mpw: %u \n", meta->min_mpw);
                         break;
         }
 

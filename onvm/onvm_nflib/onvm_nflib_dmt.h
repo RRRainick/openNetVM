@@ -9,7 +9,7 @@
 #include "onvm_flow_table.h"
 #include "onvm_nflib.h"
 
-#define ONVM_NFLIB_DMT_MPW_ENTRIES 1024
+#define ONVM_NFLIB_DMT_MPW_ENTRIES 8192
 
 extern match_t dmt_nf_match_field;
 extern rewrite_t dmt_nf_rewrite_field;
@@ -18,6 +18,8 @@ extern rewrite_t dmt_nf_rewrite_field;
 struct onvm_dmt_mpw_data {
         win_idx_t win_idx;
         mpw_t mpw;
+        uint64_t last_update_cycles;
+        int is_active;
 };
 
 struct onvm_dmt_nf_info {

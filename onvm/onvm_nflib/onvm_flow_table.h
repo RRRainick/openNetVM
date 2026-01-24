@@ -121,16 +121,19 @@ int
 onvm_ft_add_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data);
 
 int
-onvm_ft_add_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
+onvm_ft_add_dmt_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
 
 int
 onvm_ft_lookup_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data);
 
 int
-onvm_ft_lookup_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
+onvm_ft_lookup_dmt_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data);
 
 int32_t
 onvm_ft_remove_pkt(struct onvm_ft *table, struct rte_mbuf *pkt);
+
+int32_t
+onvm_ft_remove_dmt_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx);
 
 int
 onvm_ft_add_key(struct onvm_ft *table, struct onvm_ft_ipv4_5tuple *key, char **data);
@@ -140,6 +143,9 @@ onvm_ft_lookup_key(struct onvm_ft *table, struct onvm_ft_ipv4_5tuple *key, char 
 
 int32_t
 onvm_ft_remove_key(struct onvm_ft *table, struct onvm_ft_ipv4_5tuple *key);
+
+int32_t
+onvm_ft_remove_dmt_key(struct onvm_ft *table, struct onvm_ft_dmt_tuple *key);
 
 int32_t
 onvm_ft_iterate(struct onvm_ft *table, const void **key, void **data, uint32_t *next);

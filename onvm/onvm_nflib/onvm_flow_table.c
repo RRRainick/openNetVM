@@ -197,7 +197,7 @@ Returns:
  -ENOSPC if there is no space in the hash for this key.
 */
 int
-onvm_ft_add_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
+onvm_ft_add_dmt_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
         int32_t tbl_index;
         struct onvm_ft_dmt_tuple key;
         int err;
@@ -231,7 +231,7 @@ onvm_ft_lookup_pkt(struct onvm_ft *table, struct rte_mbuf *pkt, char **data) {
 }
 
 int
-onvm_ft_lookup_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
+onvm_ft_lookup_dmt_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx, char **data) {
         int32_t tbl_index;
         struct onvm_ft_dmt_tuple key;
         int ret;
@@ -264,6 +264,18 @@ onvm_ft_remove_pkt(struct onvm_ft *table, struct rte_mbuf *pkt) {
                 return ret;
         }
         return rte_hash_del_key_with_hash(table->hash, (const void *)&key, pkt->hash.rss);
+}
+
+int32_t
+onvm_ft_remove_dmt_key_parse_ctx(struct onvm_ft *table, struct onvm_pkt_parse_ctx *parse_ctx) {
+        struct onvm_ft_dmt_tuple key;
+        int ret;
+
+        ret = onvm_ft_fill_dmt_key_parse_ctx(&key, parse_ctx);
+        if (ret < 0) {
+                return ret;
+        }
+        return rte_hash_del_key_with_hash(table->hash, (const void *)&key, DEFAULT_HASH_FUNC(&key, sizeof(key), 0));
 }
 
 int
@@ -302,6 +314,12 @@ onvm_ft_remove_key(struct onvm_ft *table, struct onvm_ft_ipv4_5tuple *key) {
 
         softrss = onvm_softrss(key);
         return rte_hash_del_key_with_hash(table->hash, (const void *)key, softrss);
+}
+
+int32_t
+onvm_ft_remove_dmt_key(struct onvm_ft *table, struct onvm_ft_dmt_tuple *key) {
+
+        return rte_hash_del_key_with_hash(table->hash, (const void *)key, DEFAULT_HASH_FUNC(key, sizeof(*key), 0));
 }
 
 /* Iterate through the hash table, returning key-value pairs.
