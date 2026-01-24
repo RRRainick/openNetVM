@@ -54,18 +54,31 @@
 #include <rte_ip.h>
 #include <rte_mbuf.h>
 
+#include "onvm_common.h"
+#include "onvm_dmt_pkt_types.h"
 #include "onvm_dmt_types.h"
 #include "onvm_nflib.h"
 #include "onvm_nflib_dmt.h"
 #include "onvm_pkt_helper.h"
+#include "rte_ether.h"
 
 #define NF_TAG "dmt_ingress"
 
 match_t dmt_nf_match_field = 0;
 match_t dmt_nf_rewrite_field = 0;
 
-static uint16_t destination;
+#define DMT_IPV4_IDX 0
+#define DMT_IPV6_IDX 1
+#define DMT_ICN_IDX 2
+#define DMT_IPN_IDX 3
+#define DMT_NUM_NF 4
+
+static uint16_t destinations[DMT_NUM_NF];
 static uint8_t dest_action;
+
+static const struct rte_ether_addr TARGET_SRC_MAC = {
+    .addr_bytes = {0x00, 0x00, 0x00, 0x00, 0x00, 0x01}
+};
 
 /* number of package between each print */
 static uint32_t print_delay = 1000000;
@@ -79,8 +92,8 @@ usage(const char *progname) {
         printf("%s [EAL args] -- [NF_LIB args] -- -p <print_delay>\n", progname);
         printf("%s -F <CONFIG_FILE.json> [EAL args] -- [NF_LIB args] -- [NF args]\n\n", progname);
         printf("Flags:\n");
-        printf(" - `-d DST`: Destination Service ID to forward to\n");
-        printf(" - `-t DST`: Destination Port ID to forward to\n");
+        printf(" - `-d DST_ARRAY`: Destination Service IDs to forward to. A comma-separated list of %d IDs for IPV4, IPV6, ICN, IPN traffic.\n", DMT_NUM_NF);
+        printf(" - `-t DST_ARRAY`: Destination Port IDs to forward to. A comma-separated list of %d IDs for IPV4, IPV6, ICN, IPN traffic.\n", DMT_NUM_NF);
         printf(" - `-p <print_delay>`: number of packets between each print, e.g. `-p 1` prints every packets.\n");
 }
 
@@ -92,16 +105,17 @@ parse_app_args(int argc, char *argv[], const char *progname) {
         int c;
         int dst_flag = 0;
         int port_flag = 0;
+        char *dst_array_str = NULL;
 
         while ((c = getopt(argc, argv, "d:p:t:")) != -1) {
                 switch (c) {
                         case 'd':
-                                destination = strtoul(optarg, NULL, 10);
+                                dst_array_str = strdup(optarg);
                                 dest_action = ONVM_NF_ACTION_TONF;
                                 dst_flag = 1;
                                 break;
                         case 't':
-                                destination = strtoul(optarg, NULL, 10);
+                                dst_array_str = strdup(optarg);
                                 dest_action = ONVM_NF_ACTION_OUT;
                                 port_flag = 1;
                                 break;
@@ -116,17 +130,37 @@ parse_app_args(int argc, char *argv[], const char *progname) {
                                         RTE_LOG(INFO, APP, "Unknown option `-%c'.\n", optopt);
                                 else
                                         RTE_LOG(INFO, APP, "Unknown option character `\\x%x'.\n", optopt);
+                                free(dst_array_str);
                                 return -1;
                         default:
                                 usage(progname);
+                                free(dst_array_str);
                                 return -1;
                 }
         }
 
         if (dst_flag && port_flag) {
                 RTE_LOG(INFO, APP, "%s -d and -t options are mutually exclusive.\n", NF_TAG);
+                free(dst_array_str);
                 return -1;
         }
+
+        if (dst_flag || port_flag) {
+                char *token;
+                int i = 0;
+                for (token = strtok(dst_array_str, ","); token != NULL && i < DMT_NUM_NF; token = strtok(NULL, ",")) {
+                    destinations[i++] = strtoul(token, NULL, 10);
+                }
+
+                if (i != DMT_NUM_NF) {
+                    RTE_LOG(INFO, APP, "Expected %d destinations, but got %d.\n", DMT_NUM_NF, i);
+                    usage(progname);
+                    free(dst_array_str);
+                    return -1;
+                }
+        }
+
+        free(dst_array_str);
 
         if (!dst_flag && !port_flag) {
                 RTE_LOG(INFO, APP, "%s requires a destination NF with the -d flag or a port with the -t flag.\n", NF_TAG);
@@ -190,12 +224,41 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
                 goto end;
         }
 
+        /*
+         * NF Function
+         * Ingress: filter non-tester packet
+         */
+        if (memcmp(&parse_ctx->eth->s_addr, &TARGET_SRC_MAC, RTE_ETHER_ADDR_LEN) != 0) {
+                meta->action = ONVM_NF_ACTION_DROP;
+                goto end;
+        }
+
         onvm_nflib_dmt_record_match_data(parse_ctx, meta);
         onvm_nflib_dmt_synthesize_bitmap(info, meta);
         onvm_nflib_dmt_update_mpw_table(pkt, parse_ctx, meta, info->mpw_table, true);
 
+        /*
+         * NF Function
+         * Ingress: set packet destination based on protocol
+         */
         meta->action = dest_action;
-        meta->destination = destination;
+        switch (parse_ctx->ether_type) {
+                case RTE_ETHER_TYPE_IPV4:
+                        meta->destination = destinations[DMT_IPV4_IDX];
+                        break;
+                case RTE_ETHER_TYPE_IPV6:
+                        meta->destination = destinations[DMT_IPV6_IDX];
+                        break;
+                case DMT_ETHER_TYPE_ICN:
+                        meta->destination = destinations[DMT_ICN_IDX];
+                        break;
+                case DMT_ETHER_TYPE_IPN:
+                        meta->destination = destinations[DMT_IPN_IDX];
+                        break;
+                default:
+                        meta->action = ONVM_NF_ACTION_DROP;
+                        break;
+        }
 
 end:
         rte_free(parse_ctx);

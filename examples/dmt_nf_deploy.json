@@ -1,22 +1,31 @@
 {
-        "globals": [
-                {
-                        "directory": "dmt_log"
-                }
-        ],
-        "dmt_ingress": [
-                {
-                        "parameters": "1 -d 2"
-                }
-        ],
-        "dmt_router": [
-                {
-                        "parameters": "2 -d 3"
-                }
-        ],
-        "dmt_egress": [
-                {
-                        "parameters": "3 -t 1"
-                }
-        ]
+  "globals": [
+    {
+      "directory": "dmt_log"
+    }
+  ],
+  "dmt_ingress": [
+    {
+      "parameters": "1 -d 2,3,4,5"
+    }
+  ],
+  "dmt_router": [
+    {
+      "parameters": "2 -d 6"
+    },
+    {
+      "parameters": "3 -d 6"
+    },
+    {
+      "parameters": "4 -d 6"
+    },
+    {
+      "parameters": "5 -d 6"
+    }
+  ],
+  "dmt_egress": [
+    {
+      "parameters": "6 -t 1"
+    }
+  ]
 }

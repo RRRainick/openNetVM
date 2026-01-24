@@ -39,6 +39,8 @@
  *   exceed threshold.
  ********************************************************************/
 
+#include <stdio.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
@@ -199,12 +201,26 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
         onvm_nflib_dmt_record_rewrite_data(parse_ctx, meta, out_port);
         onvm_nflib_dmt_update_mpw_table(pkt, parse_ctx, meta, info->mpw_table, true);
 
+        /*
+         * NF Function
+         *
+         */
+
         if (onvm_nflib_dmt_do_cache(meta, CACHE_REQ_THRESHOLD)) {
                 cache_req = (struct cache_request *) rte_malloc(NULL, sizeof(struct cache_request), 0);
 
                 if (!cache_req) return 0;
 
                 onvm_nflib_dmt_format_cache_req(pkt, meta, cache_req, CACHE_REQ_ACTION_INSERT, CACHE_REQ_STATE_STATELESS);
+                // NOTE: NF function: tag hardware cache eth_saddr to 2
+                cache_req->cache_data.rewrite_data.eth_saddr.addr_bytes[5] = 0x03;
+
+                do {
+                        struct timeval tv;
+                        gettimeofday(&tv, NULL);
+                        printf("规则迁移开始时刻: %f 毫秒\n", (long)tv.tv_sec * 1e3 + (long)tv.tv_usec / 1e3);
+                } while (0);
+
                 onvm_nflib_request_cache(cache_req);
                 rte_free(cache_req);
         }

@@ -189,15 +189,18 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta, __attribute__((
         onvm_nflib_dmt_synthesize_bitmap(info, meta);
         onvm_nflib_dmt_update_mpw_table(pkt, parse_ctx, meta, info->mpw_table, true);
 
-        // NOTE: ROUTER: rewrite eth_saddr to 2, eth_daddr to 1
-        struct rte_ether_hdr *eth = onvm_pkt_ether_hdr(pkt);
+        /*
+         * NF Function
+         * ROUTER: rewrite eth_saddr to 2, eth_daddr to 1
+         */
+
         /* rewrite eth_saddr to 2 */
-        memset(&eth->s_addr, 0, RTE_ETHER_ADDR_LEN);
-        eth->s_addr.addr_bytes[5] = 2;
+        memset(&parse_ctx->eth->s_addr, 0, RTE_ETHER_ADDR_LEN);
+        parse_ctx->eth->s_addr.addr_bytes[5] = 0x02;
 
         /* rewrite eth_daddr to 1 */
-        memset(&eth->d_addr, 0, RTE_ETHER_ADDR_LEN);
-        eth->d_addr.addr_bytes[5] = 1;
+        memset(&parse_ctx->eth->d_addr, 0, RTE_ETHER_ADDR_LEN);
+        parse_ctx->eth->d_addr.addr_bytes[5] = 0x01;
 
         meta->action = dest_action;
         meta->destination = destination;
