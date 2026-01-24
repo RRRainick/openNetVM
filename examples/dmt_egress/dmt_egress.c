@@ -219,7 +219,8 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
                 do {
                         struct timeval tv;
                         gettimeofday(&tv, NULL);
-                        printf("规则迁移开始时刻: %f 毫秒\n", (long)tv.tv_sec * 1e3 + (long)tv.tv_usec / 1e3);
+                        RTE_LOG(INFO, APP, "规则迁移开始时刻: %f 毫秒\n",
+                                (long)tv.tv_sec * 1e3 + (long)tv.tv_usec / 1e3);
                 } while (0);
 
                 onvm_nflib_request_cache(cache_req);
