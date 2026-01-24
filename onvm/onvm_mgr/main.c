@@ -118,10 +118,17 @@ master_thread_main(void) {
 
         onvm_stats_init(verbosity_level);
         /* Loop forever: sleep always returns 0 or <= param */
-        while (main_keep_running && sleep(sleeptime) <= sleeptime) {
+        uint64_t last_display_time = rte_get_tsc_cycles();
+        while (main_keep_running) {
                 onvm_nf_check_status();
-                if (stats_destination != ONVM_STATS_NONE)
+                if (stats_destination != ONVM_STATS_NONE &&
+                    unlikely((rte_get_tsc_cycles() - last_display_time) / rte_get_timer_hz() >= sleeptime)) {
                         onvm_stats_display_all(sleeptime, verbosity_level);
+                        last_display_time = rte_get_tsc_cycles();
+                }
+
+                /* Small sleep to avoid unnecessary CPU usage */
+                rte_delay_us_block(100);
 
                 if (time_to_live && unlikely((rte_get_tsc_cycles() - start_time) * TIME_TTL_MULTIPLIER /
                                              rte_get_timer_hz() >= time_to_live)) {
