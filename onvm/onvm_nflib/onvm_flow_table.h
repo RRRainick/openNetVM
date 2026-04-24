@@ -83,12 +83,14 @@ struct onvm_ft_dmt_tuple {
                 uint8_t  inet6_saddr[INET6_ADDR_LEN];
                 icn_addr_t icn_saddr;
                 ipn_addr_t ipn_saddr;
+                geo_addr_t geo_saddr;
         };
         union {
                 uint32_t inet4_daddr;
                 uint8_t  inet6_daddr[INET6_ADDR_LEN];
                 icn_addr_t icn_daddr;
                 ipn_addr_t ipn_daddr;
+                geo_addr_t geo_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;
@@ -220,6 +222,10 @@ onvm_ft_fill_dmt_key_parse_ctx(struct onvm_ft_dmt_tuple *key, struct onvm_pkt_pa
                 case DMT_ETHER_TYPE_IPN:
                         key->ipn_saddr = parse_ctx->ipn_hdr->src_addr;
                         key->ipn_daddr = parse_ctx->ipn_hdr->dst_addr;
+                        break;
+                case DMT_ETHER_TYPE_GEO:
+                        key->geo_saddr = parse_ctx->geo_hdr->so_pv;
+                        key->geo_daddr = parse_ctx->geo_hdr->de_pv;
                         break;
         }
         key->proto = parse_ctx->inet_proto;

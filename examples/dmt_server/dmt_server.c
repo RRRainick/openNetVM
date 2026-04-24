@@ -35,6 +35,10 @@ static void print_ipn_addr(ipn_addr_t addr) {
     printf("%u", addr);
 }
 
+static void print_geo_addr(geo_addr_t addr) {
+    printf("%u", addr);
+}
+
 static void print_ipv6(const uint8_t *ip) {
     char buf[INET6_ADDRSTRLEN];
     if (inet_ntop(AF_INET6, ip, buf, sizeof(buf))) {
@@ -53,7 +57,8 @@ static void print_cache_data(struct cache_data *data) {
            data->type == CACHE_REQ_TYPE_IPV4 ? "IPv4" : 
            (data->type == CACHE_REQ_TYPE_IPV6 ? "IPv6" : 
            (data->type == CACHE_REQ_TYPE_ICN ? "ICN" :
-           (data->type == CACHE_REQ_TYPE_IPN ? "IPN" : "Unknown"))));
+           (data->type == CACHE_REQ_TYPE_IPN ? "IPN" :
+           (data->type == CACHE_REQ_TYPE_GEO ? "GEO" : "Unknown")))));
     printf("Match Field Bitmap: 0x%02X\n", data->match_field);
     printf("Rewrite Field Bitmap: 0x%02X\n", data->rewrite_field);
 
@@ -67,6 +72,9 @@ static void print_cache_data(struct cache_data *data) {
     } else if (data->type == CACHE_REQ_TYPE_IPN) {
         printf("  Src IPN: "); print_ipn_addr(data->match_data.ipn_saddr); printf("\n");
         printf("  Dst IPN: "); print_ipn_addr(data->match_data.ipn_daddr); printf("\n");
+    } else if (data->type == CACHE_REQ_TYPE_GEO) {
+        printf("  SO PV: "); print_geo_addr(data->match_data.geo_saddr); printf("\n");
+        printf("  DE PV: "); print_geo_addr(data->match_data.geo_daddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->match_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->match_data.inet4_daddr); printf("\n");
@@ -84,6 +92,9 @@ static void print_cache_data(struct cache_data *data) {
     } else if (data->type == CACHE_REQ_TYPE_IPN) {
         printf("  Src IPN: "); print_ipn_addr(data->rewrite_data.ipn_saddr); printf("\n");
         printf("  Dst IPN: "); print_ipn_addr(data->rewrite_data.ipn_daddr); printf("\n");
+    } else if (data->type == CACHE_REQ_TYPE_GEO) {
+        printf("  SO PV: "); print_geo_addr(data->rewrite_data.geo_saddr); printf("\n");
+        printf("  DE PV: "); print_geo_addr(data->rewrite_data.geo_daddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->rewrite_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->rewrite_data.inet4_daddr); printf("\n");

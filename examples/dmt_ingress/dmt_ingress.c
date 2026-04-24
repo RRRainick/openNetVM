@@ -71,7 +71,8 @@ match_t dmt_nf_rewrite_field = 0;
 #define DMT_IPV6_IDX 1
 #define DMT_ICN_IDX 2
 #define DMT_IPN_IDX 3
-#define DMT_NUM_NF 4
+#define DMT_GEO_IDX 4
+#define DMT_NUM_NF 5
 
 static uint16_t destinations[DMT_NUM_NF];
 static uint8_t dest_action;
@@ -92,8 +93,8 @@ usage(const char *progname) {
         printf("%s [EAL args] -- [NF_LIB args] -- -p <print_delay>\n", progname);
         printf("%s -F <CONFIG_FILE.json> [EAL args] -- [NF_LIB args] -- [NF args]\n\n", progname);
         printf("Flags:\n");
-        printf(" - `-d DST_ARRAY`: Destination Service IDs to forward to. A comma-separated list of %d IDs for IPV4, IPV6, ICN, IPN traffic.\n", DMT_NUM_NF);
-        printf(" - `-t DST_ARRAY`: Destination Port IDs to forward to. A comma-separated list of %d IDs for IPV4, IPV6, ICN, IPN traffic.\n", DMT_NUM_NF);
+        printf(" - `-d DST_ARRAY`: Destination Service IDs to forward to. A comma-separated list of %d IDs for IPV4, IPV6, ICN, IPN, GEO traffic.\n", DMT_NUM_NF);
+        printf(" - `-t DST_ARRAY`: Destination Port IDs to forward to. A comma-separated list of %d IDs for IPV4, IPV6, ICN, IPN, GEO traffic.\n", DMT_NUM_NF);
         printf(" - `-p <print_delay>`: number of packets between each print, e.g. `-p 1` prints every packets.\n");
 }
 
@@ -254,6 +255,9 @@ packet_handler(struct rte_mbuf *pkt, struct onvm_pkt_meta *meta,
                         break;
                 case DMT_ETHER_TYPE_IPN:
                         meta->destination = destinations[DMT_IPN_IDX];
+                        break;
+                case DMT_ETHER_TYPE_GEO:
+                        meta->destination = destinations[DMT_GEO_IDX];
                         break;
                 default:
                         meta->action = ONVM_NF_ACTION_DROP;
