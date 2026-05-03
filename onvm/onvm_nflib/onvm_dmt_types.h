@@ -46,6 +46,7 @@ typedef uint16_t type_t;
 #define CACHE_REQ_TYPE_IPN DMT_ETHER_TYPE_IPN
 #define CACHE_REQ_TYPE_GEO DMT_ETHER_TYPE_GEO
 #define CACHE_REQ_TYPE_MF DMT_ETHER_TYPE_MF
+#define CACHE_REQ_TYPE_NDN DMT_ETHER_TYPE_NDN
 
 
 struct dmt_match_data {
@@ -56,6 +57,7 @@ struct dmt_match_data {
                 ipn_addr_t ipn_saddr;
                 geo_addr_t geo_gn_saddr;
                 mf_addr_t mf_na_saddr;
+                ndn_addr_t ndn_name_saddr;
         };
         union {
                 uint32_t inet4_daddr;
@@ -64,6 +66,7 @@ struct dmt_match_data {
                 ipn_addr_t ipn_daddr;
                 geo_addr_t geo_gn_daddr;
                 mf_addr_t mf_na_daddr;
+                ndn_addr_t ndn_name_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;
@@ -77,6 +80,7 @@ struct dmt_rewrite_data {
                 ipn_addr_t ipn_saddr;
                 geo_addr_t geo_gn_saddr;
                 mf_addr_t mf_na_saddr;
+                ndn_addr_t ndn_name_saddr;
         };
         union {
                 uint32_t inet4_daddr;
@@ -85,6 +89,7 @@ struct dmt_rewrite_data {
                 ipn_addr_t ipn_daddr;
                 geo_addr_t geo_gn_daddr;
                 mf_addr_t mf_na_daddr;
+                ndn_addr_t ndn_name_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;

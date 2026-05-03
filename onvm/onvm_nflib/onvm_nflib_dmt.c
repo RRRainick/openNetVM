@@ -253,6 +253,10 @@ onvm_nflib_dmt_record_match_data(struct onvm_pkt_parse_ctx *parse_ctx, struct on
                         meta->match_data.mf_na_saddr = rte_be_to_cpu_32(parse_ctx->mf_hdr->src_na);
                         meta->match_data.mf_na_daddr = rte_be_to_cpu_32(parse_ctx->mf_hdr->dest_na);
                         break;
+                case CACHE_REQ_TYPE_NDN:
+                        meta->match_data.ndn_name_saddr = rte_be_to_cpu_16(parse_ctx->ndn_hdr->name);
+                        meta->match_data.ndn_name_daddr = rte_be_to_cpu_16(parse_ctx->ndn_hdr->name);
+                        break;
         }
 
         switch (parse_ctx->inet_proto) {
@@ -304,6 +308,10 @@ onvm_nflib_dmt_record_rewrite_data(struct onvm_pkt_parse_ctx *parse_ctx, struct 
                 case CACHE_REQ_TYPE_MF:
                         meta->rewrite_data.mf_na_saddr = rte_be_to_cpu_32(parse_ctx->mf_hdr->src_na);
                         meta->rewrite_data.mf_na_daddr = rte_be_to_cpu_32(parse_ctx->mf_hdr->dest_na);
+                        break;
+                case CACHE_REQ_TYPE_NDN:
+                        meta->rewrite_data.ndn_name_saddr = rte_be_to_cpu_16(parse_ctx->ndn_hdr->name);
+                        meta->rewrite_data.ndn_name_daddr = rte_be_to_cpu_16(parse_ctx->ndn_hdr->name);
                         break;
         }
 

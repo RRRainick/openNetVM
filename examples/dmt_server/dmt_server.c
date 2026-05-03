@@ -39,6 +39,10 @@ static void print_mf_addr(mf_addr_t addr) {
     printf("%u", addr);
 }
 
+static void print_ndn_name(ndn_addr_t addr) {
+    printf("%hu", addr);
+}
+
 static void print_geo_addr(geo_addr_t addr) {
     printf("%" PRIu64, addr);
 }
@@ -63,7 +67,8 @@ static void print_cache_data(struct cache_data *data) {
            (data->type == CACHE_REQ_TYPE_ICN ? "ICN" :
            (data->type == CACHE_REQ_TYPE_IPN ? "IPN" :
            (data->type == CACHE_REQ_TYPE_GEO ? "GEO" :
-           (data->type == CACHE_REQ_TYPE_MF ? "MF" : "Unknown"))))));
+           (data->type == CACHE_REQ_TYPE_MF ? "MF" :
+           (data->type == CACHE_REQ_TYPE_NDN ? "NDN" : "Unknown")))))));
     printf("Match Field Bitmap: 0x%02X\n", data->match_field);
     printf("Rewrite Field Bitmap: 0x%02X\n", data->rewrite_field);
 
@@ -83,6 +88,8 @@ static void print_cache_data(struct cache_data *data) {
     } else if (data->type == CACHE_REQ_TYPE_MF) {
         printf("  Src NA: "); print_mf_addr(data->match_data.mf_na_saddr); printf("\n");
         printf("  Dest NA: "); print_mf_addr(data->match_data.mf_na_daddr); printf("\n");
+    } else if (data->type == CACHE_REQ_TYPE_NDN) {
+        printf("  Name: "); print_ndn_name(data->match_data.ndn_name_saddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->match_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->match_data.inet4_daddr); printf("\n");
@@ -106,6 +113,8 @@ static void print_cache_data(struct cache_data *data) {
     } else if (data->type == CACHE_REQ_TYPE_MF) {
         printf("  Src NA: "); print_mf_addr(data->rewrite_data.mf_na_saddr); printf("\n");
         printf("  Dest NA: "); print_mf_addr(data->rewrite_data.mf_na_daddr); printf("\n");
+    } else if (data->type == CACHE_REQ_TYPE_NDN) {
+        printf("  Name: "); print_ndn_name(data->rewrite_data.ndn_name_saddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->rewrite_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->rewrite_data.inet4_daddr); printf("\n");

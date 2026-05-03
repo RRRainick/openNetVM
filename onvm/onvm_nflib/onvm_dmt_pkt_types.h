@@ -9,11 +9,13 @@
 #define DMT_ETHER_TYPE_IPN 0x8898
 #define DMT_ETHER_TYPE_GEO 0x8947
 #define DMT_ETHER_TYPE_MF 0x27c0
+#define DMT_ETHER_TYPE_NDN 0x8624
 
 typedef uint8_t icn_addr_t;
 typedef uint32_t ipn_addr_t;
 typedef uint64_t geo_addr_t;
 typedef uint32_t mf_addr_t;
+typedef uint16_t ndn_addr_t;
 
 struct dmt_icn_header {
     uint8_t saved:1;
@@ -66,6 +68,14 @@ struct dmt_mf_header {
     mf_addr_t dest_na;
     uint32_t pld_size;
     uint32_t seq_num;
+} __attribute__((__packed__));
+
+struct dmt_ndn_header {
+    uint8_t type;
+    uint16_t total_len;
+    uint8_t name_type;
+    uint8_t name_len;
+    ndn_addr_t name;
 } __attribute__((__packed__));
 
 #endif  // _ONVM_DMT_PKT_TYPES_H_

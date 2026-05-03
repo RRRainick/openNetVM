@@ -63,6 +63,7 @@ struct onvm_pkt_parse_ctx {
                 struct dmt_ipn_header *ipn_hdr;
                 struct dmt_geo_header *geo_hdr;
                 struct dmt_mf_header *mf_hdr;
+                struct dmt_ndn_header *ndn_hdr;
         };
         /* L4 header */
         union {
