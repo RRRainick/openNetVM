@@ -36,7 +36,7 @@ static void print_ipn_addr(ipn_addr_t addr) {
 }
 
 static void print_geo_addr(geo_addr_t addr) {
-    printf("%u", addr);
+    printf("%" PRIu64, addr);
 }
 
 static void print_ipv6(const uint8_t *ip) {
@@ -73,8 +73,8 @@ static void print_cache_data(struct cache_data *data) {
         printf("  Src IPN: "); print_ipn_addr(data->match_data.ipn_saddr); printf("\n");
         printf("  Dst IPN: "); print_ipn_addr(data->match_data.ipn_daddr); printf("\n");
     } else if (data->type == CACHE_REQ_TYPE_GEO) {
-        printf("  SO PV: "); print_geo_addr(data->match_data.geo_saddr); printf("\n");
-        printf("  DE PV: "); print_geo_addr(data->match_data.geo_daddr); printf("\n");
+        printf("  SO GN Addr: "); print_geo_addr(data->match_data.geo_gn_saddr); printf("\n");
+        printf("  DE GN Addr: "); print_geo_addr(data->match_data.geo_gn_daddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->match_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->match_data.inet4_daddr); printf("\n");
@@ -93,8 +93,8 @@ static void print_cache_data(struct cache_data *data) {
         printf("  Src IPN: "); print_ipn_addr(data->rewrite_data.ipn_saddr); printf("\n");
         printf("  Dst IPN: "); print_ipn_addr(data->rewrite_data.ipn_daddr); printf("\n");
     } else if (data->type == CACHE_REQ_TYPE_GEO) {
-        printf("  SO PV: "); print_geo_addr(data->rewrite_data.geo_saddr); printf("\n");
-        printf("  DE PV: "); print_geo_addr(data->rewrite_data.geo_daddr); printf("\n");
+        printf("  SO GN Addr: "); print_geo_addr(data->rewrite_data.geo_gn_saddr); printf("\n");
+        printf("  DE GN Addr: "); print_geo_addr(data->rewrite_data.geo_gn_daddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->rewrite_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->rewrite_data.inet4_daddr); printf("\n");

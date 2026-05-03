@@ -246,8 +246,8 @@ onvm_nflib_dmt_record_match_data(struct onvm_pkt_parse_ctx *parse_ctx, struct on
                         meta->match_data.ipn_daddr = rte_be_to_cpu_32(parse_ctx->ipn_hdr->dst_addr);
                         break;
                 case CACHE_REQ_TYPE_GEO:
-                        meta->match_data.geo_saddr = rte_be_to_cpu_32(parse_ctx->geo_hdr->so_pv);
-                        meta->match_data.geo_daddr = rte_be_to_cpu_32(parse_ctx->geo_hdr->de_pv);
+                        meta->match_data.geo_gn_saddr = rte_be_to_cpu_64(parse_ctx->geo_hdr->so_gn_addr);
+                        meta->match_data.geo_gn_daddr = rte_be_to_cpu_64(parse_ctx->geo_hdr->de_gn_addr);
                         break;
         }
 
@@ -294,8 +294,8 @@ onvm_nflib_dmt_record_rewrite_data(struct onvm_pkt_parse_ctx *parse_ctx, struct 
                         meta->rewrite_data.ipn_daddr = rte_be_to_cpu_32(parse_ctx->ipn_hdr->dst_addr);
                         break;
                 case CACHE_REQ_TYPE_GEO:
-                        meta->rewrite_data.geo_saddr = rte_be_to_cpu_32(parse_ctx->geo_hdr->so_pv);
-                        meta->rewrite_data.geo_daddr = rte_be_to_cpu_32(parse_ctx->geo_hdr->de_pv);
+                        meta->rewrite_data.geo_gn_saddr = rte_be_to_cpu_64(parse_ctx->geo_hdr->so_gn_addr);
+                        meta->rewrite_data.geo_gn_daddr = rte_be_to_cpu_64(parse_ctx->geo_hdr->de_gn_addr);
                         break;
         }
 

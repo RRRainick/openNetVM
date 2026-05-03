@@ -11,7 +11,7 @@
 
 typedef uint8_t icn_addr_t;
 typedef uint32_t ipn_addr_t;
-typedef uint32_t geo_addr_t;
+typedef uint64_t geo_addr_t;
 
 struct dmt_icn_header {
     uint8_t saved:1;
@@ -31,11 +31,29 @@ struct dmt_ipn_header {
 } __attribute__((__packed__));
 
 struct dmt_geo_header {
-    uint32_t basic_header;
-    uint32_t common_header;
-    uint32_t sn_reserved;
-    geo_addr_t so_pv;
-    geo_addr_t de_pv;
+    uint8_t basic_version_next_header;
+    uint8_t basic_reserved;
+    uint8_t lifetime;
+    uint8_t rhl;
+    uint8_t common_next_header_reserved0;
+    uint8_t header_type_subtype;
+    uint8_t traffic_class;
+    uint8_t flags;
+    uint16_t payload_length;
+    uint8_t max_hop_limit;
+    uint8_t common_reserved1;
+    uint16_t sequence_number;
+    uint16_t guc_reserved;
+    geo_addr_t so_gn_addr;
+    uint32_t so_timestamp;
+    uint32_t so_latitude;
+    uint32_t so_longitude;
+    uint16_t pai_speed;
+    uint16_t heading;
+    geo_addr_t de_gn_addr;
+    uint32_t de_timestamp;
+    uint32_t de_latitude;
+    uint32_t de_longitude;
 } __attribute__((__packed__));
 
 #endif  // _ONVM_DMT_PKT_TYPES_H_

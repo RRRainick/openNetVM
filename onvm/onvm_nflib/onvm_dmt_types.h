@@ -53,14 +53,14 @@ struct dmt_match_data {
                 uint8_t  inet6_saddr[INET6_ADDR_LEN];
                 icn_addr_t icn_saddr;
                 ipn_addr_t ipn_saddr;
-                geo_addr_t geo_saddr;
+                geo_addr_t geo_gn_saddr;
         };
         union {
                 uint32_t inet4_daddr;
                 uint8_t  inet6_daddr[INET6_ADDR_LEN];
                 icn_addr_t icn_daddr;
                 ipn_addr_t ipn_daddr;
-                geo_addr_t geo_daddr;
+                geo_addr_t geo_gn_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;
@@ -72,14 +72,14 @@ struct dmt_rewrite_data {
                 uint8_t  inet6_saddr[INET6_ADDR_LEN];
                 icn_addr_t icn_saddr;
                 ipn_addr_t ipn_saddr;
-                geo_addr_t geo_saddr;
+                geo_addr_t geo_gn_saddr;
         };
         union {
                 uint32_t inet4_daddr;
                 uint8_t  inet6_daddr[INET6_ADDR_LEN];
                 icn_addr_t icn_daddr;
                 ipn_addr_t ipn_daddr;
-                geo_addr_t geo_daddr;
+                geo_addr_t geo_gn_daddr;
         };
         uint16_t inet_sport;
         uint16_t inet_dport;
