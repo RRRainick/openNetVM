@@ -6,29 +6,32 @@
   ],
   "dmt_ingress": [
     {
-      "parameters": "1 -d 2,3,4,5,6"
+      "parameters": "1 -d 2,3,4,5,6,7"
     }
   ],
   "dmt_router": [
     {
-      "parameters": "2 -d 7"
+      "parameters": "2 -d 8"
     },
     {
-      "parameters": "3 -d 7"
+      "parameters": "3 -d 8"
     },
     {
-      "parameters": "4 -d 7"
+      "parameters": "4 -d 8"
     },
     {
-      "parameters": "5 -d 7"
+      "parameters": "5 -d 8"
     },
     {
-      "parameters": "6 -d 7"
+      "parameters": "6 -d 8"
+    },
+    {
+      "parameters": "7 -d 8"
     }
   ],
   "dmt_egress": [
     {
-      "parameters": "7 -t 1"
+      "parameters": "8 -t 1"
     }
   ]
 }

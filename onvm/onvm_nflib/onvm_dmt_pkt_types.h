@@ -8,10 +8,12 @@
 #define DMT_ETHER_TYPE_ICN 0x88AB
 #define DMT_ETHER_TYPE_IPN 0x8898
 #define DMT_ETHER_TYPE_GEO 0x8947
+#define DMT_ETHER_TYPE_MF 0x27c0
 
 typedef uint8_t icn_addr_t;
 typedef uint32_t ipn_addr_t;
 typedef uint64_t geo_addr_t;
+typedef uint32_t mf_addr_t;
 
 struct dmt_icn_header {
     uint8_t saved:1;
@@ -54,6 +56,16 @@ struct dmt_geo_header {
     uint32_t de_timestamp;
     uint32_t de_latitude;
     uint32_t de_longitude;
+} __attribute__((__packed__));
+
+struct dmt_mf_header {
+    uint32_t mf_type;
+    uint32_t src_guid;
+    uint32_t dest_guid;
+    mf_addr_t src_na;
+    mf_addr_t dest_na;
+    uint32_t pld_size;
+    uint32_t seq_num;
 } __attribute__((__packed__));
 
 #endif  // _ONVM_DMT_PKT_TYPES_H_

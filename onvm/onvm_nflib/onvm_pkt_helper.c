@@ -809,6 +809,11 @@ onvm_pkt_parse(struct rte_mbuf* pkt, struct onvm_pkt_parse_ctx* ctx) {
                         len += sizeof(*ctx->geo_hdr);
                         ctx->inet_proto = IP_PROTOCOL_INVALID;
                         break;
+                case DMT_ETHER_TYPE_MF:
+                        ctx->mf_hdr = rte_pktmbuf_mtod_offset(pkt, struct dmt_mf_header*, len);
+                        len += sizeof(*ctx->mf_hdr);
+                        ctx->inet_proto = IP_PROTOCOL_INVALID;
+                        break;
                 default:
                         goto err;
         }

@@ -249,6 +249,10 @@ onvm_nflib_dmt_record_match_data(struct onvm_pkt_parse_ctx *parse_ctx, struct on
                         meta->match_data.geo_gn_saddr = rte_be_to_cpu_64(parse_ctx->geo_hdr->so_gn_addr);
                         meta->match_data.geo_gn_daddr = rte_be_to_cpu_64(parse_ctx->geo_hdr->de_gn_addr);
                         break;
+                case CACHE_REQ_TYPE_MF:
+                        meta->match_data.mf_na_saddr = rte_be_to_cpu_32(parse_ctx->mf_hdr->src_na);
+                        meta->match_data.mf_na_daddr = rte_be_to_cpu_32(parse_ctx->mf_hdr->dest_na);
+                        break;
         }
 
         switch (parse_ctx->inet_proto) {
@@ -296,6 +300,10 @@ onvm_nflib_dmt_record_rewrite_data(struct onvm_pkt_parse_ctx *parse_ctx, struct 
                 case CACHE_REQ_TYPE_GEO:
                         meta->rewrite_data.geo_gn_saddr = rte_be_to_cpu_64(parse_ctx->geo_hdr->so_gn_addr);
                         meta->rewrite_data.geo_gn_daddr = rte_be_to_cpu_64(parse_ctx->geo_hdr->de_gn_addr);
+                        break;
+                case CACHE_REQ_TYPE_MF:
+                        meta->rewrite_data.mf_na_saddr = rte_be_to_cpu_32(parse_ctx->mf_hdr->src_na);
+                        meta->rewrite_data.mf_na_daddr = rte_be_to_cpu_32(parse_ctx->mf_hdr->dest_na);
                         break;
         }
 

@@ -35,6 +35,10 @@ static void print_ipn_addr(ipn_addr_t addr) {
     printf("%u", addr);
 }
 
+static void print_mf_addr(mf_addr_t addr) {
+    printf("%u", addr);
+}
+
 static void print_geo_addr(geo_addr_t addr) {
     printf("%" PRIu64, addr);
 }
@@ -58,7 +62,8 @@ static void print_cache_data(struct cache_data *data) {
            (data->type == CACHE_REQ_TYPE_IPV6 ? "IPv6" : 
            (data->type == CACHE_REQ_TYPE_ICN ? "ICN" :
            (data->type == CACHE_REQ_TYPE_IPN ? "IPN" :
-           (data->type == CACHE_REQ_TYPE_GEO ? "GEO" : "Unknown")))));
+           (data->type == CACHE_REQ_TYPE_GEO ? "GEO" :
+           (data->type == CACHE_REQ_TYPE_MF ? "MF" : "Unknown"))))));
     printf("Match Field Bitmap: 0x%02X\n", data->match_field);
     printf("Rewrite Field Bitmap: 0x%02X\n", data->rewrite_field);
 
@@ -75,6 +80,9 @@ static void print_cache_data(struct cache_data *data) {
     } else if (data->type == CACHE_REQ_TYPE_GEO) {
         printf("  SO GN Addr: "); print_geo_addr(data->match_data.geo_gn_saddr); printf("\n");
         printf("  DE GN Addr: "); print_geo_addr(data->match_data.geo_gn_daddr); printf("\n");
+    } else if (data->type == CACHE_REQ_TYPE_MF) {
+        printf("  Src NA: "); print_mf_addr(data->match_data.mf_na_saddr); printf("\n");
+        printf("  Dest NA: "); print_mf_addr(data->match_data.mf_na_daddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->match_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->match_data.inet4_daddr); printf("\n");
@@ -95,6 +103,9 @@ static void print_cache_data(struct cache_data *data) {
     } else if (data->type == CACHE_REQ_TYPE_GEO) {
         printf("  SO GN Addr: "); print_geo_addr(data->rewrite_data.geo_gn_saddr); printf("\n");
         printf("  DE GN Addr: "); print_geo_addr(data->rewrite_data.geo_gn_daddr); printf("\n");
+    } else if (data->type == CACHE_REQ_TYPE_MF) {
+        printf("  Src NA: "); print_mf_addr(data->rewrite_data.mf_na_saddr); printf("\n");
+        printf("  Dest NA: "); print_mf_addr(data->rewrite_data.mf_na_daddr); printf("\n");
     } else {
         printf("  Src IP: "); print_ipv4(data->rewrite_data.inet4_saddr); printf("\n");
         printf("  Dst IP: "); print_ipv4(data->rewrite_data.inet4_daddr); printf("\n");
