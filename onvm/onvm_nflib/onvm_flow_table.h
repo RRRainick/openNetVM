@@ -250,6 +250,10 @@ onvm_ft_fill_dmt_key_parse_ctx(struct onvm_ft_dmt_tuple *key, struct onvm_pkt_pa
                         key->inet_sport = parse_ctx->udp_hdr->src_port;
                         key->inet_dport = parse_ctx->udp_hdr->dst_port;
                         break;
+                case IP_PROTOCOL_IPV6_ROUTING:
+                        key->inet_sport = 0;
+                        key->inet_dport = 0;
+                        break;
                 case IP_PROTOCOL_INVALID:
                         key->inet_sport = 0;
                         key->inet_dport = 0;

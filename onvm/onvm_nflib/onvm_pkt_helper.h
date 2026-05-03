@@ -78,6 +78,7 @@ struct onvm_pkt_parse_ctx {
 
 #define IP_PROTOCOL_TCP 6
 #define IP_PROTOCOL_UDP 17
+#define IP_PROTOCOL_IPV6_ROUTING 43
 #define IP_PROTOCOL_INVALID 255
 
 #define SUPPORTS_IPV4_CHECKSUM_OFFLOAD (1 << 0)

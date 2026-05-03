@@ -268,6 +268,10 @@ onvm_nflib_dmt_record_match_data(struct onvm_pkt_parse_ctx *parse_ctx, struct on
                         meta->match_data.inet_sport = rte_be_to_cpu_16(parse_ctx->udp_hdr->src_port);
                         meta->match_data.inet_dport = rte_be_to_cpu_16(parse_ctx->udp_hdr->dst_port);
                         break;
+                case IP_PROTOCOL_IPV6_ROUTING:
+                        meta->match_data.inet_sport = 0;
+                        meta->match_data.inet_dport = 0;
+                        break;
                 case IP_PROTOCOL_INVALID:
                         meta->match_data.inet_sport = 0;
                         meta->match_data.inet_dport = 0;
@@ -324,6 +328,10 @@ onvm_nflib_dmt_record_rewrite_data(struct onvm_pkt_parse_ctx *parse_ctx, struct 
                 case IP_PROTOCOL_UDP:
                         meta->rewrite_data.inet_sport = rte_be_to_cpu_16(parse_ctx->udp_hdr->src_port);
                         meta->rewrite_data.inet_dport = rte_be_to_cpu_16(parse_ctx->udp_hdr->dst_port);
+                        break;
+                case IP_PROTOCOL_IPV6_ROUTING:
+                        meta->rewrite_data.inet_sport = 0;
+                        meta->rewrite_data.inet_dport = 0;
                         break;
                 case IP_PROTOCOL_INVALID:
                         meta->rewrite_data.inet_sport = 0;

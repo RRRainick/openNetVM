@@ -833,6 +833,9 @@ onvm_pkt_parse(struct rte_mbuf* pkt, struct onvm_pkt_parse_ctx* ctx) {
                         ctx->udp_hdr = rte_pktmbuf_mtod_offset(pkt, struct rte_udp_hdr*, len);
                         len += sizeof(*ctx->udp_hdr);
                         break;
+                case IP_PROTOCOL_IPV6_ROUTING:
+                        ctx->udp_hdr = NULL;
+                        break;
                 case IP_PROTOCOL_INVALID:
                         ctx->udp_hdr = NULL;
                         break;
